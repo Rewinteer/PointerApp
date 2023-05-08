@@ -12,6 +12,22 @@
 
 {% block body %}
     <div id="map"></div>
-    <div id="edit-panel" style="display:none"></div>
     <script src="/static/js/getPoints.js"></script>
+    <script src="/static//js/attrEditing.js"></script>
+    <div id="edit-panel">
+        <h3>Edit attributes</h3>
+        <button id="close-btn" class="close-btn" onclick="closePanel()">X</button>
+        <table id="attributes-table">
+            <thead>
+                <th>Key</th>
+                <th>Value</th>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <button id="new-key-btn">Add new key</button>
+        <button id="save-edits-btn">Save edits</button>
+        <button id="remove-point-btn">Remove point</button>
+    </div>
+ 
 {% endblock %}
