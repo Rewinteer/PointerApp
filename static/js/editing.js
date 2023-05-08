@@ -49,15 +49,6 @@ function editClick(attributesString) {
     var attributes = JSON.parse(attributesString);
     
     for (const attribute in attributes) {
-        // let row = attributesTable.insertRow();
-        // let key = row.insertCell();
-        // let value = row.insertCell();
-        // key.innerHTML = `${attribute}`;
-        // value.innerHTML = `
-        // <div class="d-flex align-items-center">
-        //     <textarea rows="1" cols="30">${attributes[attribute]}</textarea>
-        //     <button type="button" class="btn btn-danger btn-sm align-middle remove-row" onclick=removeRow(${attributesTable})>Remove row</button>
-        // </div>`;
         fillRows(attributesTable, attribute, attributes[attribute]);
     }
 }
