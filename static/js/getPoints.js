@@ -11,11 +11,12 @@ fetch('/points')
             onEachFeature: function (feature, layer) {
                 let popupContent = `<b>ID = ${feature.properties.id}</b>`;
                 const attributes = feature.properties.attributes;
+
                 for (const key in attributes) {
                     popupContent += `</br>${key} = ${attributes[key]}`
                 }
-                layer.bindPopup(popupContent);
-                // ('${feature.properties.id}, ${feature.properties.attributes.name}')
+
+                layer.bindPopup(popupContent);            
             }
         });
         points.addTo(map);
