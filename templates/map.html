@@ -17,17 +17,22 @@
     <div id="edit-panel">
         <h3>Edit attributes</h3>
         <button id="close-btn" class="close-btn" onclick="closePanel()">X</button>
-        <table id="attributes-table">
+        <table id="attributes-table" class="table table-bordered">
             <thead>
-                <th>Key</th>
-                <th>Value</th>
+                <tr>
+                    <th scope="col">Key</th>
+                    <th scope="col">Value</th>
+                </tr>
             </thead>
             <tbody>
             </tbody>
         </table>
-        <button id="new-key-btn">Add new key</button>
-        <button id="save-edits-btn">Save edits</button>
-        <button id="remove-point-btn">Remove point</button>
+        <button id="new-key-btn" class="btn btn-primary" onclick="addRow()">Add new row</button>
+        <button id="save-edits-btn" class="btn btn-success" onclick="saveTable()">Save edits</button>
+        <div>
+            <button id="remove-point-btn" class="btn btn-danger" onclick="removePoint()">Remove point</button>
+        </div>
+        
     </div>
  
 {% endblock %}

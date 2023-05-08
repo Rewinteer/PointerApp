@@ -25,20 +25,60 @@ fetch('/points')
 
     });
 
+function fillRows(tableBody, key, value) {
+    let row = tableBody.insertRow();
+    let newKey = row.insertCell();
+    let newValue = row.insertCell();
+    newKey.innerHTML = `
+    <div class="d-flex align-items-center">
+        <input size="10" type="text" placeholder="Key" value="${key}">
+    </div>`;
+    newValue.innerHTML = `
+    <div class="d-flex align-items-center">
+        <textarea rows="1" cols="25">${value}</textarea>
+        <button type="button" class="btn btn-danger btn-sm align-middle remove-row">Remove row</button>
+    </div>`;
+}
+
 function editClick(attributesString) {
     const editPanel = document.getElementById("edit-panel");
     editPanel.classList.toggle('show');
-    let attributesTable = document.getElementById("attributes-table");
+    let attributesTable = document.querySelector("#attributes-table tbody");
     attributesTable.innerHTML = "";
 
     var attributes = JSON.parse(attributesString);
     
-
     for (const attribute in attributes) {
-        let row = attributesTable.insertRow();
-        let key = row.insertCell();
-        let value = row.insertCell();
-        key.innerHTML = `${attribute}`;
-        value.innerHTML = `<textarea rows="2" cols="40">${attributes[attribute]}</textarea>`;
+        // let row = attributesTable.insertRow();
+        // let key = row.insertCell();
+        // let value = row.insertCell();
+        // key.innerHTML = `${attribute}`;
+        // value.innerHTML = `
+        // <div class="d-flex align-items-center">
+        //     <textarea rows="1" cols="30">${attributes[attribute]}</textarea>
+        //     <button type="button" class="btn btn-danger btn-sm align-middle remove-row" onclick=removeRow(${attributesTable})>Remove row</button>
+        // </div>`;
+        fillRows(attributesTable, attribute, attributes[attribute]);
     }
 }
+
+function closePanel() {
+    var editPanel = document.getElementById("edit-panel");
+    editPanel.classList.toggle('show');
+}
+
+function addRow() {
+    let attributesTable = document.querySelector("#attributes-table tbody");
+    fillRows(attributesTable, '', '');
+}
+
+// row removal
+document.addEventListener("DOMContentLoaded", function() {
+    var attributesTable = document.getElementById("attributes-table");
+    attributesTable.addEventListener("click", function (event) {
+        if (event.target.classList.contains("remove-row")) {
+            const row = event.target.closest("tr");
+            row.parentNode.removeChild(row);
+        }
+    });
+});

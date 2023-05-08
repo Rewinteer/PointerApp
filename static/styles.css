@@ -60,8 +60,12 @@ nav .navbar-brand .green
     z-index: 1000;
     box-shadow: -5px 0px 5px rgba(0, 0, 0, 0.3);
     display: none;
-  }
+}
   
-  #edit-panel.show {
+#edit-panel.show {
     display: block;
+}
+
+#remove-point-btn {
+    margin-top: 20px;
 }
