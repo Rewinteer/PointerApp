@@ -5,6 +5,8 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
+var markers = {};
+
 // add points from db to the map
 fetch('/points')
     .then(response => response.json())
@@ -22,7 +24,7 @@ fetch('/points')
                 
                 const buttonDiv = document.createElement("div");
                 const button = document.createElement("button");
-                button.className = "btn btn-primary btn-sm btn-smaller"
+                button.className = "btn btn-primary btn-sm btn-smaller";
                 button.innerHTML = "Edit";
 
                 button.onclick = function() {
@@ -31,7 +33,10 @@ fetch('/points')
                 buttonDiv.appendChild(button);
 
                 div.appendChild(buttonDiv);
-                return L.marker(latlng).bindPopup(div);
+
+                const marker = L.marker(latlng).bindPopup(div);
+                markers[featureId] = marker;
+                return marker;
             }
         });
         pointsLayer.addTo(map);
@@ -53,6 +58,8 @@ function fillRows(tableBody, key, value) {
     </div>`;
 }
 
+var selectedNodeId = null;
+
 function editClick(featureId) {
     const editPanel = document.getElementById("edit-panel");
     editPanel.classList.toggle('show');
@@ -72,11 +79,37 @@ function editClick(featureId) {
     .then(response => response.json())
     .then(pointData => {
         var attributes = pointData.attributes;
-    
+        var id = pointData.id;
+        var user_id = pointData.user_id
+        
+        // fill editing table
         for (const attribute in attributes) {
             fillRows(attributesTable, attribute, attributes[attribute]);
         }
+        
+        selectedNodeId = id;
     });
+}
+
+function removePoint() {
+    if (window.confirm(`Are you shure you want to remove the point with ID = ${selectedNodeId}`)) {
+                    
+        fetch('/removePoint', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'id': `${selectedNodeId}`
+            })
+        })
+        .then(() => {
+            const marker = markers[selectedNodeId];
+            if (marker) {
+                marker.remove();
+            }
+        });
+    }
 }
 
 function closePanel() {

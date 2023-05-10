@@ -24,6 +24,8 @@ def points():
     cur = conn.cursor()
     cur.execute('SELECT id, ST_AsGeoJSON(ST_FlipCoordinates(location)), user_id, attributes FROM points;')
     rows = cur.fetchall()
+    cur.close()
+    conn.close()
 
     features = []
     for row in rows:
@@ -43,10 +45,6 @@ def points():
         "features": features
     }
 
-    print("FEATURES: ")
-    print(result)
-    print("JSONIFY FEATURES:")
-    print(jsonify(result))
     return jsonify(result)
 
 @app.route("/pointData", methods=["POST"])
@@ -54,7 +52,6 @@ def pointData():
     conn = get_db_connection()
     cur = conn.cursor()
     id = request.get_json().get('id')
-    print("ID = " + id)
 
     cur.execute("SELECT id, user_id, attributes FROM points WHERE id=%s;", (id,))
     dbresponse = cur.fetchall()[0]
@@ -63,5 +60,24 @@ def pointData():
         'user_id': dbresponse[1],
         'attributes': dbresponse[2]
     }
-    
+
+    cur.close()
+    conn.close()
+
     return jsonify(responseToSend)
+
+@app.route("/removePoint", methods=["POST"])
+def removePoint():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    id = request.get_json().get('id')
+
+    # TODO implement user checking by ID
+    cur.execute("DELETE FROM points WHERE id=%s;", (id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("Removal")
+    return redirect("/")
+
+# INSERT INTO points(location, user_id, attributes) VALUES (ST_GeomFromText('POINT(54.258 -1.885)'), 0, '{"test": "test"}');
