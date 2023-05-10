@@ -69,3 +69,8 @@ nav .navbar-brand .green
 #remove-point-btn {
     margin-top: 20px;
 }
+
+.btn-custom {
+    padding: 0.10rem 0.2rem;
+    font-size: 0.75rem;
+}

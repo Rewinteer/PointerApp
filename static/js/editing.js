@@ -1,30 +1,43 @@
+// map creation
 var map = L.map('map').setView([51.505, -0.09], 13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
+// add points from db to the map
 fetch('/points')
     .then(response => response.json())
-    .then(data => {
-        var points = L.geoJSON(data, {
-            onEachFeature: function (feature, layer) {
-                let popupContent = `<b>ID = ${feature.properties.id}</b>`;
-                var attributes = feature.properties.attributes;
+    .then(points => {
+        var pointsLayer = L.geoJSON(points, {
+            pointToLayer: (feature, latlng) => {
+                let div = document.createElement("div");
+                let featureId = feature.properties.id;
+                let attributes = feature.properties.attributes;
+
+                div.innerHTML = `<b>ID = ${featureId}</b>`;
                 for (const key in attributes) {
-                    popupContent += `</br>${key} = ${attributes[key]}`
+                    div.innerHTML += `<br>${key} = ${attributes[key]}`;
                 }
+                
+                const buttonDiv = document.createElement("div");
+                const button = document.createElement("button");
+                button.className = "btn btn-primary btn-sm btn-smaller"
+                button.innerHTML = "Edit";
 
-                attributesToSend = JSON.stringify(attributes);
-                console.log(`${attributesToSend}`)
+                button.onclick = function() {
+                    editClick(featureId);
+                }
+                buttonDiv.appendChild(button);
 
-                layer.bindPopup(popupContent + '</br><button id="edit-button" onclick="editClick(\`${attributesToSend}\`)">Edit</button>');
+                div.appendChild(buttonDiv);
+                return L.marker(latlng).bindPopup(div);
             }
         });
-        points.addTo(map);
-
+        pointsLayer.addTo(map);
     });
 
+// fill table
 function fillRows(tableBody, key, value) {
     let row = tableBody.insertRow();
     let newKey = row.insertCell();
@@ -36,21 +49,34 @@ function fillRows(tableBody, key, value) {
     newValue.innerHTML = `
     <div class="d-flex align-items-center">
         <textarea rows="1" cols="25">${value}</textarea>
-        <button type="button" class="btn btn-danger btn-sm align-middle remove-row">Remove row</button>
+        <button type="button" class="btn btn-danger btn-sm btn-smaller remove-row">Remove row</button>
     </div>`;
 }
 
-function editClick(attributesString) {
+function editClick(featureId) {
     const editPanel = document.getElementById("edit-panel");
     editPanel.classList.toggle('show');
     let attributesTable = document.querySelector("#attributes-table tbody");
     attributesTable.innerHTML = "";
 
-    var attributes = JSON.parse(attributesString);
+    // receive point data from the server
+    fetch('/pointData', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            'id': `${featureId}`
+        })
+    })
+    .then(response => response.json())
+    .then(pointData => {
+        var attributes = pointData.attributes;
     
-    for (const attribute in attributes) {
-        fillRows(attributesTable, attribute, attributes[attribute]);
-    }
+        for (const attribute in attributes) {
+            fillRows(attributesTable, attribute, attributes[attribute]);
+        }
+    });
 }
 
 function closePanel() {
