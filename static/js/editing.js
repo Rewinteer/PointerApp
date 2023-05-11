@@ -7,6 +7,28 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 var markers = {};
 
+// fill marker popup
+function fillPopup(div, featureId, attributes) {
+    div.innerHTML = `<b>ID = ${featureId}</b>`;
+    for (const key in attributes) {
+        div.innerHTML += `<br>${key} = ${attributes[key]}`;
+    }
+    
+    const buttonDiv = document.createElement("div");
+    const button = document.createElement("button");
+    button.className = "btn btn-primary btn-sm btn-smaller";
+    button.innerHTML = "Edit";
+
+    button.onclick = function() {
+        editClick(featureId);
+    }
+    buttonDiv.appendChild(button);
+
+    div.appendChild(buttonDiv);
+
+    return div;
+}
+
 // add points from db to the map
 fetch('/points')
     .then(response => response.json())
@@ -17,22 +39,7 @@ fetch('/points')
                 let featureId = feature.properties.id;
                 let attributes = feature.properties.attributes;
 
-                div.innerHTML = `<b>ID = ${featureId}</b>`;
-                for (const key in attributes) {
-                    div.innerHTML += `<br>${key} = ${attributes[key]}`;
-                }
-                
-                const buttonDiv = document.createElement("div");
-                const button = document.createElement("button");
-                button.className = "btn btn-primary btn-sm btn-smaller";
-                button.innerHTML = "Edit";
-
-                button.onclick = function() {
-                    editClick(featureId);
-                }
-                buttonDiv.appendChild(button);
-
-                div.appendChild(buttonDiv);
+                div = fillPopup(div, featureId, attributes);
 
                 const marker = L.marker(latlng).bindPopup(div);
                 markers[featureId] = marker;
@@ -42,24 +49,9 @@ fetch('/points')
         pointsLayer.addTo(map);
     });
 
-// fill table
-function fillRows(tableBody, key, value) {
-    let row = tableBody.insertRow();
-    let newKey = row.insertCell();
-    let newValue = row.insertCell();
-    newKey.innerHTML = `
-    <div class="d-flex align-items-center">
-        <input size="10" type="text" placeholder="Key" value="${key}">
-    </div>`;
-    newValue.innerHTML = `
-    <div class="d-flex align-items-center">
-        <textarea rows="1" cols="25">${value}</textarea>
-        <button type="button" class="btn btn-danger btn-sm btn-smaller remove-row">Remove row</button>
-    </div>`;
-}
-
 var selectedNodeId = null;
 
+// open editing panel
 function editClick(featureId) {
     const editPanel = document.getElementById("edit-panel");
     editPanel.classList.toggle('show');
@@ -78,9 +70,9 @@ function editClick(featureId) {
     })
     .then(response => response.json())
     .then(pointData => {
-        var attributes = pointData.attributes;
-        var id = pointData.id;
-        var user_id = pointData.user_id
+        let attributes = pointData.attributes;
+        let id = pointData.id;
+        let user_id = pointData.user_id
         
         // fill editing table
         for (const attribute in attributes) {
@@ -91,8 +83,32 @@ function editClick(featureId) {
     });
 }
 
+// close editing panel
+function closePanel() {
+    let editPanel = document.getElementById("edit-panel");
+    editPanel.classList.toggle('show');
+    console.log("close panel");
+}
+
+// fill attributes table
+function fillRows(tableBody, key, value) {
+    let row = tableBody.insertRow();
+    let newKey = row.insertCell();
+    let newValue = row.insertCell();
+    newKey.innerHTML = `
+    <div class="d-flex align-items-center">
+        <input size="10" type="text" placeholder="Key" value="${key}">
+    </div>`;
+    newValue.innerHTML = `
+    <div class="d-flex align-items-center">
+        <textarea rows="1" cols="25">${value}</textarea>
+        <button type="button" class="btn btn-danger btn-sm btn-smaller remove-row">Remove row</button>
+    </div>`;
+}
+
+// points removal
 function removePoint() {
-    if (window.confirm(`Are you shure you want to remove the point with ID = ${selectedNodeId}`)) {
+    if (window.confirm(`Are you sure you want to remove the point with ID = ${selectedNodeId}?`)) {
                     
         fetch('/removePoint', {
             method: 'POST',
@@ -107,24 +123,21 @@ function removePoint() {
             const marker = markers[selectedNodeId];
             if (marker) {
                 marker.remove();
+                closePanel();
             }
         });
     }
 }
 
-function closePanel() {
-    var editPanel = document.getElementById("edit-panel");
-    editPanel.classList.toggle('show');
-}
-
+// add row to the attributes table
 function addRow() {
     let attributesTable = document.querySelector("#attributes-table tbody");
     fillRows(attributesTable, '', '');
 }
 
-// row removal
+// remove row from the attributes panel
 document.addEventListener("DOMContentLoaded", function() {
-    var attributesTable = document.getElementById("attributes-table");
+    let attributesTable = document.getElementById("attributes-table");
     attributesTable.addEventListener("click", function (event) {
         if (event.target.classList.contains("remove-row")) {
             const row = event.target.closest("tr");
@@ -132,3 +145,47 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+// save attributes changes
+function saveEdits() {
+    let attributesTable = document.querySelector("#attributes-table tbody");
+    let attributesData = {};
+    for (let i = 0; i < attributesTable.rows.length; i++) {
+        const row = attributesTable.rows[i];
+        const keyInput = row.querySelector("input[type='text']");
+        const valueTextArea = row.querySelector("textarea");
+
+        const key = keyInput.value;
+        const value = valueTextArea.value;
+        
+        attributesData[key] = value;
+    }
+
+    const jsonData = JSON.stringify(attributesData);
+    console.log(jsonData);
+
+    if (window.confirm('Are you sure you want to save edits?')) {
+                    
+        fetch('/saveEdits', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'id': `${selectedNodeId}`,
+                'attributes': `${jsonData}`
+            })
+        })
+        .then(() => {
+            const marker = markers[selectedNodeId];
+            if (marker) {
+                let div = document.createElement("div");
+                div = fillPopup(div, selectedNodeId, attributesData);
+                marker.setPopupContent(div);
+                marker.bindPopup(div);
+                marker.update();
+                closePanel();
+            }
+        });
+    }
+}
