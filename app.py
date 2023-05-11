@@ -80,4 +80,17 @@ def removePoint():
     print("Removal")
     return redirect("/")
 
+@app.route("/saveEdits", methods=["POST"])
+def saveEdits():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    id = request.get_json().get('id')
+    attributes = request.get_json().get('attributes')
+    print(attributes)
+
+    cur.execute('UPDATE points SET attributes = %s WHERE id = %s', (attributes, id))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect("/")
 # INSERT INTO points(location, user_id, attributes) VALUES (ST_GeomFromText('POINT(54.258 -1.885)'), 0, '{"test": "test"}');
