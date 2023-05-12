@@ -1,3 +1,8 @@
+var markers = {};
+var selectedNodeId = null;
+var selectedLocation = null;
+var pointsLayer = null;
+
 // map creation
 var map = L.map('map').setView([51.505, -0.09], 13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -5,7 +10,32 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-var markers = {};
+fetchAllPoints();
+
+// add points from db to the map
+function fetchAllPoints(pointsLayer) {
+    fetch('/points')
+    .then(response => response.json())
+    .then(points => {
+        if (pointsLayer != null) {
+            pointsLayer.clearLayers();
+        }
+        pointsLayer = L.geoJSON(points, {
+            pointToLayer: (feature, latlng) => {
+                let div = document.createElement("div");
+                let featureId = feature.properties.id;
+                let attributes = feature.properties.attributes;
+
+                div = fillPopup(div, featureId, attributes);
+
+                const marker = L.marker(latlng).bindPopup(div);
+                markers[featureId] = marker;
+                return marker;
+            }
+        });
+        pointsLayer.addTo(map);
+    });
+}
 
 // fill marker popup
 function fillPopup(div, featureId, attributes) {
@@ -28,28 +58,6 @@ function fillPopup(div, featureId, attributes) {
 
     return div;
 }
-
-// add points from db to the map
-fetch('/points')
-    .then(response => response.json())
-    .then(points => {
-        var pointsLayer = L.geoJSON(points, {
-            pointToLayer: (feature, latlng) => {
-                let div = document.createElement("div");
-                let featureId = feature.properties.id;
-                let attributes = feature.properties.attributes;
-
-                div = fillPopup(div, featureId, attributes);
-
-                const marker = L.marker(latlng).bindPopup(div);
-                markers[featureId] = marker;
-                return marker;
-            }
-        });
-        pointsLayer.addTo(map);
-    });
-
-var selectedNodeId = null;
 
 // open editing panel
 function editClick(featureId) {
@@ -88,6 +96,7 @@ function closePanel() {
     let editPanel = document.getElementById("edit-panel");
     editPanel.classList.toggle('show');
     console.log("close panel");
+    selectedLocation = null;
 }
 
 // fill attributes table
@@ -108,25 +117,33 @@ function fillRows(tableBody, key, value) {
 
 // points removal
 function removePoint() {
-    if (window.confirm(`Are you sure you want to remove the point with ID = ${selectedNodeId}?`)) {
+    // if points from DB selected
+    if (selectedNodeId) {
+        if (window.confirm(`Are you sure you want to remove the point with ID = ${selectedNodeId}?`)) {
                     
-        fetch('/removePoint', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                'id': `${selectedNodeId}`
+            fetch('/removePoint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'id': `${selectedNodeId}`
+                })
             })
-        })
-        .then(() => {
-            const marker = markers[selectedNodeId];
-            if (marker) {
-                marker.remove();
-                closePanel();
-            }
-        });
+            .then(() => {
+                const marker = markers[selectedNodeId];
+                if (marker) {
+                    marker.remove();
+                    closePanel();
+                }
+            });
+        }
+    // if unsaved point selected (during creation)
+    } else {
+        closePanel();
+        map.closePopup();
     }
+    
 }
 
 // add row to the attributes table
@@ -148,6 +165,42 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // save attributes changes
 function saveEdits() {
+    const attributesData = getAttributesData()
+    const jsonData = JSON.stringify(attributesData);
+
+    if (window.confirm('Are you sure you want to save edits?')) {
+                    
+        fetch('/saveEdits', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'id': `${selectedNodeId}`,
+                'attributes': `${jsonData}`,
+                'location': `${selectedLocation}`
+            })
+        })
+        .then(() => {
+            const marker = markers[selectedNodeId];
+            if (marker) {
+                // update popup of the updated marker
+                let div = document.createElement("div");
+                div = fillPopup(div, selectedNodeId, attributesData);
+                marker.setPopupContent(div);
+                marker.bindPopup(div);
+                marker.update();
+            } else {
+                // update all points after new point creation
+                fetchAllPoints(pointsLayer);
+                map.closePopup();
+            }
+            closePanel();
+        });
+    }
+}
+
+function getAttributesData() {
     let attributesTable = document.querySelector("#attributes-table tbody");
     let attributesData = {};
     for (let i = 0; i < attributesTable.rows.length; i++) {
@@ -161,31 +214,33 @@ function saveEdits() {
         attributesData[key] = value;
     }
 
-    const jsonData = JSON.stringify(attributesData);
-    console.log(jsonData);
+    return attributesData;
+}
 
-    if (window.confirm('Are you sure you want to save edits?')) {
-                    
-        fetch('/saveEdits', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                'id': `${selectedNodeId}`,
-                'attributes': `${jsonData}`
-            })
-        })
-        .then(() => {
-            const marker = markers[selectedNodeId];
-            if (marker) {
-                let div = document.createElement("div");
-                div = fillPopup(div, selectedNodeId, attributesData);
-                marker.setPopupContent(div);
-                marker.bindPopup(div);
-                marker.update();
-                closePanel();
-            }
-        });
-    }
+// add new point
+map.on('contextmenu', (event) => {
+    map.closePopup();
+    // right click popup
+    let coordinates = event.latlng;
+    let coordinatesJson = JSON.stringify({
+        lat: coordinates.lat,
+        lng: coordinates.lng
+    });
+
+    console.log(coordinates);
+    let createBtnMarkup = `<button class='btn btn-primary btn-sm btn-smaller' onclick='createPoint(${coordinatesJson})'>New point</button>`
+    L.popup()
+    .setLatLng(coordinates)
+    .setContent(createBtnMarkup)
+    .addTo(map)
+    .openOn(map);
+});
+
+function createPoint(coordinates) {
+    let editPanel = document.getElementById("edit-panel");
+    let attributesTable = document.querySelector("#attributes-table tbody");
+    attributesTable.innerHTML = "";
+    selectedNodeId = null;
+    selectedLocation = JSON.stringify(coordinates);
+    editPanel.classList.toggle('show');
 }

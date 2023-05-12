@@ -86,11 +86,19 @@ def saveEdits():
     cur = conn.cursor()
     id = request.get_json().get('id')
     attributes = request.get_json().get('attributes')
-    print(attributes)
+    location = json.loads(request.get_json().get('location'))
 
-    cur.execute('UPDATE points SET attributes = %s WHERE id = %s', (attributes, id))
+    if id != 'null':
+        cur.execute('UPDATE points SET attributes = %s WHERE id = %s', (attributes, id))
+    else:
+        cur.execute("INSERT INTO points(location, user_id, attributes) VALUES (ST_GeomFromText('POINT(%s %s)'), 0, %s);", (location['lat'], location['lng'], attributes))
+    
     conn.commit()
     cur.close()
     conn.close()
     return redirect("/")
 # INSERT INTO points(location, user_id, attributes) VALUES (ST_GeomFromText('POINT(54.258 -1.885)'), 0, '{"test": "test"}');
+
+@app.route("/newPoint", methods=["POST"])
+def newPoint():
+    return redirect("/")
