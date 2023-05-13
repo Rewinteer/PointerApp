@@ -74,3 +74,12 @@ nav .navbar-brand .green
     padding: 0.10rem 0.2rem;
     font-size: 0.75rem;
 }
+
+.input-list {
+    margin-left: 40px;
+    margin-right: 10px;
+}
+
+.textarea-list {
+    margin-right: 10px;
+}

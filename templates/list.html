@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}List{% endblock %}
+
+{% block body %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col" style="padding-left: 50px;">Attributes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in pointsData %}
+                <tr>
+                    <th scope="row">#{{ row[0] }}</th>
+                    {% set attributes = row[1] %}
+                    <td>
+                        {% for key in attributes %}
+                            <div class="d-flex align-items-center" style="margin-bottom: 5px;">
+                                <input size="20" type="text" placeholder="Key" value="{{ key }}" class="input-list">
+                                <textarea rows="1" cols="25" class="textarea-list" placeholder="Value">{{ attributes[key] }}</textarea>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-row">Remove row</button>
+                            </div>
+                        {% endfor %}
+                        <div class="d-flex align-items-center" style="margin-bottom: 15px; margin-left: 40px;">
+                            <button type="button" class="btn btn-outline-primary btn-sm remove-row" style="margin-right: 10px;">Add row</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-row" style="margin-right: 10px;">Remove point</button>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="button" class="btn btn-success">Save Edits</button>
+    <button type="button" class="btn btn-warning">Discard your edits</button>
+    <div style="margin-top: 30px;">
+        <button type="button" class="btn btn-danger">Remove all points</button>
+    </div>
+{% endblock %}

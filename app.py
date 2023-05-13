@@ -1,10 +1,19 @@
 from flask import Flask, redirect, render_template, jsonify, request
+from jinja2 import Environment, PackageLoader
 import os
 import psycopg2
 import json
 
 app = Flask(__name__)
 app.debug = True
+
+# app.jinja_loader = PackageLoader('app', 'templates')
+# app.jinja_env = Environment(loader=app.jinja_loader)
+
+# def parse_json(json_string):
+#     return json.loads(json_string)
+
+# app.jinja_env.filters['parse_json'] = parse_json
 
 def get_db_connection():
     conn = psycopg2.connect(
@@ -22,6 +31,7 @@ def index():
 def points():
     conn = get_db_connection()
     cur = conn.cursor()
+    # WHERE user_id = ?
     cur.execute('SELECT id, ST_AsGeoJSON(ST_FlipCoordinates(location)), user_id, attributes FROM points;')
     rows = cur.fetchall()
     cur.close()
@@ -52,7 +62,7 @@ def pointData():
     conn = get_db_connection()
     cur = conn.cursor()
     id = request.get_json().get('id')
-
+    # WHERE user_id = ?
     cur.execute("SELECT id, user_id, attributes FROM points WHERE id=%s;", (id,))
     dbresponse = cur.fetchall()[0]
     responseToSend = {
@@ -72,7 +82,7 @@ def removePoint():
     cur = conn.cursor()
     id = request.get_json().get('id')
 
-    # TODO implement user checking by ID
+    # TODO implement user checking by ID to prevent other users points removal
     cur.execute("DELETE FROM points WHERE id=%s;", (id,))
     conn.commit()
     cur.close()
@@ -89,14 +99,27 @@ def saveEdits():
     location = json.loads(request.get_json().get('location'))
 
     # update of existing points
+    # WHERE user_id = ?
     if id != 'null':
         cur.execute('UPDATE points SET attributes = %s WHERE id = %s', (attributes, id))
     # new points creation
     else:
+        # WHERE user_id = ?
         cur.execute("INSERT INTO points(location, user_id, attributes) VALUES (ST_GeomFromText('POINT(%s %s)'), 0, %s);", (location['lat'], location['lng'], attributes))
     
     conn.commit()
     cur.close()
     conn.close()
     return redirect("/")
-# INSERT INTO points(location, user_id, attributes) VALUES (ST_GeomFromText('POINT(54.258 -1.885)'), 0, '{"test": "test"}');
+
+@app.route("/pointList")
+def pointList():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, attributes FROM points WHERE user_id = 0 ORDER BY id;")
+    pointsData = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return render_template("list.html", pointsData=pointsData)
+    
