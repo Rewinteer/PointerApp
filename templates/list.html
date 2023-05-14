@@ -3,7 +3,8 @@
 {% block title %}List{% endblock %}
 
 {% block body %}
-    <table class="table table-striped">
+    <script src="/static/js/list.js"></script>
+    <table id="points-table" class="table table-striped">
         <thead>
             <tr>
                 <th scope="col">ID</th>
@@ -13,19 +14,23 @@
         <tbody>
             {% for row in pointsData %}
                 <tr>
-                    <th scope="row">#{{ row[0] }}</th>
+                    <th scope="row" class="list-point-id">#{{ row[0] }}</th>
                     {% set attributes = row[1] %}
                     <td>
-                        {% for key in attributes %}
-                            <div class="d-flex align-items-center" style="margin-bottom: 5px;">
-                                <input size="20" type="text" placeholder="Key" value="{{ key }}" class="input-list">
-                                <textarea rows="1" cols="25" class="textarea-list" placeholder="Value">{{ attributes[key] }}</textarea>
-                                <button type="button" class="btn btn-outline-danger btn-sm remove-row">Remove row</button>
+                        <div class="point-attr-row">
+                            <div class="list-point-attrs">
+                                {% for key in attributes %}
+                                    <div class="d-flex align-items-center list-point-attr" style="margin-bottom: 5px;">
+                                        <input size="20" type="text" placeholder="Key" value="{{ key }}" class="input-list">
+                                        <textarea rows="1" cols="25" class="textarea-list" placeholder="Value">{{ attributes[key] }}</textarea>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-row">Remove row</button>
+                                    </div>
+                                {% endfor %}
+                                </div>
+                                <div class="d-flex align-items-center" style="margin-bottom: 15px; margin-left: 40px;">
+                                    <button type="button" class="btn btn-outline-primary btn-sm add-row" style="margin-right: 10px;">Add row</button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-point" style="margin-right: 10px;">Remove point</button>
                             </div>
-                        {% endfor %}
-                        <div class="d-flex align-items-center" style="margin-bottom: 15px; margin-left: 40px;">
-                            <button type="button" class="btn btn-outline-primary btn-sm remove-row" style="margin-right: 10px;">Add row</button>
-                            <button type="button" class="btn btn-outline-danger btn-sm remove-row" style="margin-right: 10px;">Remove point</button>
                         </div>
                     </td>
                 </tr>
