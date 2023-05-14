@@ -87,8 +87,7 @@ def removePoint():
     conn.commit()
     cur.close()
     conn.close()
-    print("Removal")
-    return redirect("/")
+    return "removed"
 
 @app.route("/saveEdits", methods=["POST"])
 def saveEdits():
@@ -122,4 +121,24 @@ def pointList():
     conn.close()
 
     return render_template("list.html", pointsData=pointsData)
-    
+
+@app.route("/listPointsUpdate", methods=["POST"])
+def listPointUpdate():
+    newData = request.get_json()
+    dbQuery = ""
+    # implement user_id check
+    for id in newData:
+        attributes = newData[id]
+        query = "UPDATE points SET attributes = '%s' WHERE id = %s; " % (attributes, id)
+        dbQuery += query
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(dbQuery)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect("/pointList")
+
+

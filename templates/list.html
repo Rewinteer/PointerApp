@@ -13,7 +13,7 @@
         </thead>
         <tbody>
             {% for row in pointsData %}
-                <tr>
+                <tr class="point-row" data-element-id="{{ row[0] }}">
                     <th scope="row" class="list-point-id">#{{ row[0] }}</th>
                     {% set attributes = row[1] %}
                     <td>
@@ -26,10 +26,10 @@
                                         <button type="button" class="btn btn-outline-danger btn-sm remove-row">Remove row</button>
                                     </div>
                                 {% endfor %}
-                                </div>
-                                <div class="d-flex align-items-center" style="margin-bottom: 15px; margin-left: 40px;">
-                                    <button type="button" class="btn btn-outline-primary btn-sm add-row" style="margin-right: 10px;">Add row</button>
-                                    <button type="button" class="btn btn-outline-danger btn-sm remove-point" style="margin-right: 10px;">Remove point</button>
+                            </div>
+                            <div class="d-flex align-items-center" style="margin-bottom: 15px; margin-left: 40px;">
+                                <button type="button" class="btn btn-outline-primary btn-sm add-row" style="margin-right: 10px;">Add row</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-point" data-target-id="{{ row[0] }}" style="margin-right: 10px;">Remove point</button>
                             </div>
                         </div>
                     </td>
@@ -37,7 +37,7 @@
             {% endfor %}
         </tbody>
     </table>
-    <button type="button" class="btn btn-success">Save Edits</button>
+    <button type="button" class="btn btn-success" onclick="saveListEdits()">Save Edits</button>
     <button type="button" class="btn btn-warning">Discard your edits</button>
     <div style="margin-top: 30px;">
         <button type="button" class="btn btn-danger">Remove all points</button>
