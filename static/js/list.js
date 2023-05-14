@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // remove point
         } else if (event.target.classList.contains("remove-point")) {
             let pointId = event.target.dataset.targetId;
-            if (window.confirm(`Are you sure you want to remove the point with ID = ${pointId}?`)) {
+            if (window.confirm(`Are you sure you want to remove the point with ID = ${pointId}? This action cannot be reversed.`)) {
                     
                 fetch('/removePoint', {
                     method: 'POST',
@@ -62,7 +62,7 @@ function saveListEdits() {
     }
 
     console.log(pointsData);
-    if (window.confirm(`Are you sure you want to save your edits?`)) {
+    if (window.confirm(`Are you sure you want to save your attributes edits?`)) {
                     
         fetch('/listPointsUpdate', {
             method: 'POST',
