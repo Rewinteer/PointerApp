@@ -12,6 +12,43 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 fetchAllPoints();
 
+// Listeners reistration:
+// remove row from the attributes panel button listener
+document.addEventListener("DOMContentLoaded", function() {
+    let attributesTable = document.getElementById("attributes-table");
+    attributesTable.addEventListener("click", function (event) {
+        if (event.target.classList.contains("remove-row")) {
+            const row = event.target.closest("tr");
+            row.parentNode.removeChild(row);
+        }
+    });
+    attributesTable.addEventListener("keydown", function(event) {
+        const saveEditsButton = document.getElementById("save-edits-btn");
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            saveEditsButton.click();
+        }
+    });
+});
+
+// add new point on right click listener
+map.on('contextmenu', (event) => {
+    map.closePopup();
+    // right click popup
+    let coordinates = event.latlng;
+    let coordinatesJson = JSON.stringify({
+        lat: coordinates.lat,
+        lng: coordinates.lng
+    });
+
+    let createBtnMarkup = `<button class='btn btn-primary btn-sm btn-smaller' onclick='createPoint(${coordinatesJson})'>New point</button>`
+    L.popup()
+    .setLatLng(coordinates)
+    .setContent(createBtnMarkup)
+    .addTo(map)
+    .openOn(map);
+});
+
 // add points from db to the map
 function fetchAllPoints(pointsLayer) {
     fetch('/points')
@@ -158,24 +195,6 @@ function addRow() {
     fillRows(attributesTable, '', '');
 }
 
-// remove row from the attributes panel
-document.addEventListener("DOMContentLoaded", function() {
-    let attributesTable = document.getElementById("attributes-table");
-    attributesTable.addEventListener("click", function (event) {
-        if (event.target.classList.contains("remove-row")) {
-            const row = event.target.closest("tr");
-            row.parentNode.removeChild(row);
-        }
-    });
-    attributesTable.addEventListener("keydown", function(event) {
-        const saveEditsButton = document.getElementById("save-edits-btn");
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            saveEditsButton.click();
-        }
-    });
-});
-
 // save attributes changes
 function saveEdits() {
     const attributesData = getAttributesData()
@@ -229,24 +248,6 @@ function getAttributesData() {
 
     return attributesData;
 }
-
-// add new point
-map.on('contextmenu', (event) => {
-    map.closePopup();
-    // right click popup
-    let coordinates = event.latlng;
-    let coordinatesJson = JSON.stringify({
-        lat: coordinates.lat,
-        lng: coordinates.lng
-    });
-
-    let createBtnMarkup = `<button class='btn btn-primary btn-sm btn-smaller' onclick='createPoint(${coordinatesJson})'>New point</button>`
-    L.popup()
-    .setLatLng(coordinates)
-    .setContent(createBtnMarkup)
-    .addTo(map)
-    .openOn(map);
-});
 
 function createPoint(coordinates) {
     let editPanel = document.getElementById("edit-panel");
