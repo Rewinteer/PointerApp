@@ -59,9 +59,18 @@ function fillPopup(div, featureId, attributes) {
     return div;
 }
 
+// close panel if already opened
+function closePanelIfOpened (editPanel) {
+    if (editPanel.classList.contains('show')) {
+        closePanel();
+    }
+}
+
 // open editing panel
 function editClick(featureId) {
+    selectedNodeId = featureId;
     const editPanel = document.getElementById("edit-panel");
+    closePanelIfOpened(editPanel);
     editPanel.classList.toggle('show');
     let attributesTable = document.querySelector("#attributes-table tbody");
     attributesTable.innerHTML = "";
@@ -86,8 +95,6 @@ function editClick(featureId) {
         for (const attribute in attributes) {
             fillRows(attributesTable, attribute, attributes[attribute]);
         }
-        
-        selectedNodeId = id;
     });
 }
 
@@ -243,6 +250,7 @@ map.on('contextmenu', (event) => {
 
 function createPoint(coordinates) {
     let editPanel = document.getElementById("edit-panel");
+    closePanelIfOpened(editPanel);
     let attributesTable = document.querySelector("#attributes-table tbody");
     attributesTable.innerHTML = "";
     selectedNodeId = null;
