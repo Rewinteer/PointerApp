@@ -1,5 +1,4 @@
 from flask import Flask, redirect, render_template, jsonify, request
-from jinja2 import Environment, PackageLoader
 import os
 import psycopg2
 import json
@@ -7,14 +6,7 @@ import json
 app = Flask(__name__)
 app.debug = True
 
-# app.jinja_loader = PackageLoader('app', 'templates')
-# app.jinja_env = Environment(loader=app.jinja_loader)
-
-# def parse_json(json_string):
-#     return json.loads(json_string)
-
-# app.jinja_env.filters['parse_json'] = parse_json
-
+# TODO DB query execution in the separate function
 def get_db_connection():
     conn = psycopg2.connect(
         host="localhost",
@@ -126,7 +118,7 @@ def pointList():
 def listPointUpdate():
     newData = request.get_json()
     dbQuery = ""
-    # implement user_id check
+    # TODO implement user_id check
     for id in newData:
         attributes = newData[id]
         query = "UPDATE points SET attributes = '%s' WHERE id = %s; " % (attributes, id)
@@ -141,4 +133,17 @@ def listPointUpdate():
 
     return redirect("/pointList")
 
+@app.route("/removeAllPoints", methods=["POST"])
+def removeAllPoints():
+    # TODO user id validation
+    user_id = 0
+    dbQuery = "DELETE FROM points WHERE user_id = %s;" % (user_id)
 
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(dbQuery)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect("/pointList")

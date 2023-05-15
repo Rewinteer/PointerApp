@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
+// save all edits made in the list mode
 function saveListEdits() {
     const attrTable = document.getElementById("points-table");
     const rows = attrTable.getElementsByClassName('point-row');
@@ -70,6 +71,25 @@ function saveListEdits() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(pointsData)
+        });
+    }
+}
+
+function discardListEdits() {
+    location.reload();
+}
+
+function removeAllPoints() {
+    if (window.confirm(`Are you sure you want to remove ALL points? This action cannot be reversed.`)) {
+                    
+        fetch('/removeAllPoints', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(() => {
+            location.reload();
         });
     }
 }

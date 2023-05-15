@@ -95,7 +95,6 @@ function editClick(featureId) {
 function closePanel() {
     let editPanel = document.getElementById("edit-panel");
     editPanel.classList.toggle('show');
-    console.log("close panel");
     selectedLocation = null;
 }
 
@@ -159,6 +158,13 @@ document.addEventListener("DOMContentLoaded", function() {
         if (event.target.classList.contains("remove-row")) {
             const row = event.target.closest("tr");
             row.parentNode.removeChild(row);
+        }
+    });
+    attributesTable.addEventListener("keydown", function(event) {
+        const saveEditsButton = document.getElementById("save-edits-btn");
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            saveEditsButton.click();
         }
     });
 });
@@ -227,7 +233,6 @@ map.on('contextmenu', (event) => {
         lng: coordinates.lng
     });
 
-    console.log(coordinates);
     let createBtnMarkup = `<button class='btn btn-primary btn-sm btn-smaller' onclick='createPoint(${coordinatesJson})'>New point</button>`
     L.popup()
     .setLatLng(coordinates)
