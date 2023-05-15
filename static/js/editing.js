@@ -12,7 +12,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 fetchAllPoints();
 
-// Listeners reistration:
+// Listeners registration:
 // remove row from the attributes panel button listener
 document.addEventListener("DOMContentLoaded", function() {
     let attributesTable = document.getElementById("attributes-table");
@@ -96,13 +96,6 @@ function fillPopup(div, featureId, attributes) {
     return div;
 }
 
-// close panel if already opened
-function closePanelIfOpened (editPanel) {
-    if (editPanel.classList.contains('show')) {
-        closePanel();
-    }
-}
-
 // open editing panel
 function editClick(featureId) {
     selectedNodeId = featureId;
@@ -135,13 +128,6 @@ function editClick(featureId) {
     });
 }
 
-// close editing panel
-function closePanel() {
-    let editPanel = document.getElementById("edit-panel");
-    editPanel.classList.toggle('show');
-    selectedLocation = null;
-}
-
 // fill attributes table
 function fillRows(tableBody, key, value) {
     let row = tableBody.insertRow();
@@ -158,41 +144,28 @@ function fillRows(tableBody, key, value) {
     </div>`;
 }
 
-// points removal
-function removePoint() {
-    // if points from DB selected
-    if (selectedNodeId) {
-        if (window.confirm(`Are you sure you want to remove the point with ID = ${selectedNodeId}?`)) {
-                    
-            fetch('/removePoint', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    'id': `${selectedNodeId}`
-                })
-            })
-            .then(() => {
-                const marker = markers[selectedNodeId];
-                if (marker) {
-                    marker.remove();
-                    closePanel();
-                }
-            });
-        }
-    // if unsaved point selected (during creation)
-    } else {
-        closePanel();
-        map.closePopup();
-    }
-    
-}
-
 // add row to the attributes table
 function addRow() {
     let attributesTable = document.querySelector("#attributes-table tbody");
     fillRows(attributesTable, '', '');
+}
+
+// parse attributes table
+function getAttributesData() {
+    let attributesTable = document.querySelector("#attributes-table tbody");
+    let attributesData = {};
+    for (let i = 0; i < attributesTable.rows.length; i++) {
+        const row = attributesTable.rows[i];
+        const keyInput = row.querySelector("input[type='text']");
+        const valueTextArea = row.querySelector("textarea");
+
+        const key = keyInput.value;
+        const value = valueTextArea.value;
+        
+        attributesData[key] = value;
+    }
+
+    return attributesData;
 }
 
 // save attributes changes
@@ -232,23 +205,52 @@ function saveEdits() {
     }
 }
 
-function getAttributesData() {
-    let attributesTable = document.querySelector("#attributes-table tbody");
-    let attributesData = {};
-    for (let i = 0; i < attributesTable.rows.length; i++) {
-        const row = attributesTable.rows[i];
-        const keyInput = row.querySelector("input[type='text']");
-        const valueTextArea = row.querySelector("textarea");
-
-        const key = keyInput.value;
-        const value = valueTextArea.value;
-        
-        attributesData[key] = value;
-    }
-
-    return attributesData;
+// close editing panel
+function closePanel() {
+    let editPanel = document.getElementById("edit-panel");
+    editPanel.classList.toggle('show');
+    selectedLocation = null;
 }
 
+// close panel if already opened
+function closePanelIfOpened (editPanel) {
+    if (editPanel.classList.contains('show')) {
+        closePanel();
+    }
+}
+
+// points removal
+function removePoint() {
+    // if points from DB selected
+    if (selectedNodeId) {
+        if (window.confirm(`Are you sure you want to remove the point with ID = ${selectedNodeId}?`)) {
+                    
+            fetch('/removePoint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'id': `${selectedNodeId}`
+                })
+            })
+            .then(() => {
+                const marker = markers[selectedNodeId];
+                if (marker) {
+                    marker.remove();
+                    closePanel();
+                }
+            });
+        }
+    // if unsaved point selected (during creation)
+    } else {
+        closePanel();
+        map.closePopup();
+    }
+    
+}
+
+// create new point
 function createPoint(coordinates) {
     let editPanel = document.getElementById("edit-panel");
     closePanelIfOpened(editPanel);
