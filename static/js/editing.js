@@ -62,16 +62,36 @@ function fetchAllPoints(pointsLayer) {
                 let div = document.createElement("div");
                 let featureId = feature.properties.id;
                 let attributes = feature.properties.attributes;
+                let isCompleted = feature.properties.is_completed;
 
                 div = fillPopup(div, featureId, attributes);
 
-                const marker = L.marker(latlng).bindPopup(div);
+                // const iconOptions = {
+                //     iconUrl: isCompleted ? "static/icons/marker-green.png" : "static/icons/marker-blue.png"
+                // };
+
+                // const markerIcon = L.icon(iconOptions)
+                const markerIcon = getMarkerIcon(isCompleted);
+                const marker = L.marker(latlng, { icon: markerIcon }).bindPopup(div);
+
                 markers[featureId] = marker;
                 return marker;
             }
         });
         pointsLayer.addTo(map);
     });
+}
+
+// get marker icon based on the data
+function getMarkerIcon(isCompleted) {
+    const iconOptions = {
+        iconUrl: isCompleted ? "static/icons/marker-green.png" : "static/icons/marker-blue.png",
+        iconAnchor: [24, 48],
+        popupAnchor: [1, -40],
+    };
+
+    const markerIcon = L.icon(iconOptions)
+    return markerIcon;
 }
 
 // fill marker popup
@@ -118,13 +138,15 @@ function editClick(featureId) {
     .then(response => response.json())
     .then(pointData => {
         let attributes = pointData.attributes;
-        let id = pointData.id;
-        let user_id = pointData.user_id
+        let isCompleted = pointData.is_completed;
         
         // fill editing table
         for (const attribute in attributes) {
             fillRows(attributesTable, attribute, attributes[attribute]);
         }
+
+        let checkbox = document.getElementById("is-completed-chk");
+        checkbox.checked = isCompleted;
     });
 }
 
@@ -172,6 +194,9 @@ function getAttributesData() {
 function saveEdits() {
     const attributesData = getAttributesData()
     const jsonData = JSON.stringify(attributesData);
+    
+    const checkbox = document.getElementById("is-completed-chk");
+    const isCompleted = checkbox.checked;
 
     if (window.confirm('Are you sure you want to save edits?')) {
                     
@@ -183,7 +208,8 @@ function saveEdits() {
             body: JSON.stringify({
                 'id': `${selectedNodeId}`,
                 'attributes': `${jsonData}`,
-                'location': `${selectedLocation}`
+                'location': `${selectedLocation}`,
+                'is_completed': `${isCompleted}`
             })
         })
         .then(() => {
@@ -194,6 +220,10 @@ function saveEdits() {
                 div = fillPopup(div, selectedNodeId, attributesData);
                 marker.setPopupContent(div);
                 marker.bindPopup(div);
+
+                const markerIcon = getMarkerIcon(isCompleted);
+                marker.setIcon(markerIcon);
+
                 marker.update();
             } else {
                 // update all points after new point creation

@@ -9,11 +9,12 @@
             <tr>
                 <th scope="col">ID</th>
                 <th scope="col" style="padding-left: 50px;">Attributes</th>
+                <th scope="col">Completed</th>
             </tr>
         </thead>
         <tbody>
             {% for row in pointsData %}
-                <tr class="point-row" data-element-id="{{ row[0] }}">
+                <tr class="point-row" data-element-id="{{ row[0] }}" data-completed="{{ row[2] }}">
                     <th scope="row" class="list-point-id">#{{ row[0] }}</th>
                     {% set attributes = row[1] %}
                     <td>
@@ -31,6 +32,16 @@
                                 <button type="button" class="btn btn-outline-primary btn-sm add-row" style="margin-right: 10px;">Add row</button>
                                 <button type="button" class="btn btn-danger btn-sm remove-point" data-target-id="{{ row[0] }}" style="margin-right: 10px;">Remove point</button>
                             </div>
+                        </div>
+                    </td>
+                    <td class="checkbox-cell" style="text-align: center;">
+                        <div class="form-check form-switch" style="padding-bottom: 5px; float: right;">
+                            {% if row[2] %}
+                                <input class="form-check-input list-checkbox" type="checkbox" checked>
+                            {% else %}
+                                <input class="form-check-input list-checkbox" type="checkbox">
+                            {% endif %}
+                            <label class="form-check-label">Completed</label>
                         </div>
                     </td>
                 </tr>

@@ -1,4 +1,4 @@
-// attributes maniulation
+// attributes manipulation
 document.addEventListener("DOMContentLoaded", function() {
     let pointsTable = document.getElementById("points-table");
     pointsTable.addEventListener("click", function(event) {
@@ -47,11 +47,14 @@ function saveListEdits() {
     const rows = attrTable.getElementsByClassName('point-row');
 
     let pointsData = {};
+    let isCompleted = {};
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const attrDivs = row.getElementsByClassName("list-point-attr");
 
         const pointId = row.getAttribute('data-element-id');
+        const checkbox = row.querySelector(".list-checkbox")
+        const completed = checkbox.checked;
         let pointAttrs = {};
         for (let j = 0; j < attrDivs.length; j++) {
             const attrDiv = attrDivs[j];
@@ -59,10 +62,12 @@ function saveListEdits() {
             const value = attrDiv.querySelector('.textarea-list').value;
             pointAttrs[key] = value;
         }
-        pointsData[pointId] = JSON.stringify(pointAttrs);        
+        pointsData[pointId] = pointAttrs;
+        isCompleted[pointId] = completed;      
     }
 
     console.log(pointsData);
+    console.log(isCompleted)
     if (window.confirm(`Are you sure you want to save your attributes edits?`)) {
                     
         fetch('/listPointsUpdate', {
@@ -70,7 +75,10 @@ function saveListEdits() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(pointsData)
+            body: JSON.stringify({
+                'attributes': pointsData,
+                'is_completed': isCompleted
+            })
         });
     }
 }

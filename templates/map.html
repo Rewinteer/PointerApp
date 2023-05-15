@@ -26,8 +26,14 @@
             <tbody>
             </tbody>
         </table>
-        <button id="new-key-btn" class="btn btn-primary" onclick="addRow()">Add new row</button>
-        <button id="save-edits-btn" class="btn btn-success" onclick="saveEdits()">Save edits</button>
+        <div class="form-check form-switch" style="padding-bottom: 5px; float: right;">
+            <input id="is-completed-chk" class="form-check-input" type="checkbox">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Completed</label>
+        </div>
+        <div>
+            <button id="new-key-btn" class="btn btn-primary" onclick="addRow()">Add new row</button>
+            <button id="save-edits-btn" class="btn btn-success" onclick="saveEdits()">Save edits</button>
+        </div>
         <div>
             <button id="remove-point-btn" class="btn btn-danger" onclick="removePoint()">Remove point</button>
         </div>

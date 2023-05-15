@@ -24,7 +24,7 @@ def points():
     conn = get_db_connection()
     cur = conn.cursor()
     # WHERE user_id = ?
-    cur.execute('SELECT id, ST_AsGeoJSON(ST_FlipCoordinates(location)), user_id, attributes FROM points;')
+    cur.execute('SELECT id, ST_AsGeoJSON(ST_FlipCoordinates(location)), user_id, attributes, is_completed FROM points;')
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -36,7 +36,8 @@ def points():
             "properties": {
                 "id": row[0], 
                 "user_id": row[2],
-                "attributes": row[3]
+                "attributes": row[3],
+                "is_completed": row[4]
             },
             "geometry": json.loads(row[1])
         }
@@ -55,12 +56,13 @@ def pointData():
     cur = conn.cursor()
     id = request.get_json().get('id')
     # WHERE user_id = ?
-    cur.execute("SELECT id, user_id, attributes FROM points WHERE id=%s;", (id,))
+    cur.execute("SELECT id, user_id, attributes, is_completed FROM points WHERE id=%s;", (id,))
     dbresponse = cur.fetchall()[0]
     responseToSend = {
         'id': dbresponse[0],
         'user_id': dbresponse[1],
-        'attributes': dbresponse[2]
+        'attributes': dbresponse[2],
+        'is_completed': dbresponse[3]
     }
 
     cur.close()
@@ -88,15 +90,16 @@ def saveEdits():
     id = request.get_json().get('id')
     attributes = request.get_json().get('attributes')
     location = json.loads(request.get_json().get('location'))
+    is_completed = request.get_json().get('is_completed')
 
     # update of existing points
     # WHERE user_id = ?
     if id != 'null':
-        cur.execute('UPDATE points SET attributes = %s WHERE id = %s', (attributes, id))
+        cur.execute('UPDATE points SET attributes = %s, is_completed = %s WHERE id = %s', (attributes, is_completed, id))
     # new points creation
     else:
         # WHERE user_id = ?
-        cur.execute("INSERT INTO points(location, user_id, attributes) VALUES (ST_GeomFromText('POINT(%s %s)'), 0, %s);", (location['lat'], location['lng'], attributes))
+        cur.execute("INSERT INTO points(location, user_id, attributes, is_completed) VALUES (ST_GeomFromText('POINT(%s %s)'), 0, %s, %s);", (location['lat'], location['lng'], attributes, is_completed))
     
     conn.commit()
     cur.close()
@@ -107,7 +110,7 @@ def saveEdits():
 def pointList():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, attributes FROM points WHERE user_id = 0 ORDER BY id;")
+    cur.execute("SELECT id, attributes, is_completed FROM points WHERE user_id = 0 ORDER BY id;")
     pointsData = cur.fetchall()
     cur.close()
     conn.close()
@@ -117,11 +120,16 @@ def pointList():
 @app.route("/listPointsUpdate", methods=["POST"])
 def listPointUpdate():
     newData = request.get_json()
+    attributesData = newData.get('attributes')
+    completenessData = newData.get('is_completed')
+    print(newData)
+
     dbQuery = ""
     # TODO implement user_id check
-    for id in newData:
-        attributes = newData[id]
-        query = "UPDATE points SET attributes = '%s' WHERE id = %s; " % (attributes, id)
+    for id in attributesData:
+        attributes = json.dumps(attributesData[id])
+        is_completed = completenessData[id]
+        query = "UPDATE points SET attributes = '%s', is_completed = %s WHERE id = %s; " % (attributes, is_completed, id)
         dbQuery += query
 
     conn = get_db_connection()
@@ -130,6 +138,7 @@ def listPointUpdate():
     conn.commit()
     cur.close()
     conn.close()
+    print(dbQuery)
 
     return redirect("/pointList")
 
