@@ -66,8 +66,6 @@ function saveListEdits() {
         isCompleted[pointId] = completed;      
     }
 
-    console.log(pointsData);
-    console.log(isCompleted)
     if (window.confirm(`Are you sure you want to save your attributes edits?`)) {
                     
         fetch('/listPointsUpdate', {
