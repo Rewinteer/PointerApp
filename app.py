@@ -122,7 +122,6 @@ def listPointUpdate():
     newData = request.get_json()
     attributesData = newData.get('attributes')
     completenessData = newData.get('is_completed')
-    print(newData)
 
     dbQuery = ""
     # TODO implement user_id check
@@ -138,7 +137,6 @@ def listPointUpdate():
     conn.commit()
     cur.close()
     conn.close()
-    print(dbQuery)
 
     return redirect("/pointList")
 
