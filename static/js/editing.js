@@ -81,6 +81,8 @@ function fetchAllPoints(pointsLayer) {
         });
         
         pointsLayer.addTo(map);
+        const pointsLayerBounds = pointsLayer.getBounds();
+        map.fitBounds(pointsLayerBounds);
     })
     .catch(error => {
         showResponsePopup(error.message)
