@@ -10,7 +10,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-fetchAllPoints();
+fetchAllPoints(updateBbox=true);
 
 // Listeners registration:
 // remove row from the attributes panel button listener
@@ -50,7 +50,7 @@ map.on('contextmenu', (event) => {
 });
 
 // add points from db to the map
-function fetchAllPoints(pointsLayer) {
+function fetchAllPoints(updateBbox = false) {
     fetch('/points')
     .then(response => {
         if (response.ok) {
@@ -81,8 +81,11 @@ function fetchAllPoints(pointsLayer) {
         });
         
         pointsLayer.addTo(map);
-        const pointsLayerBounds = pointsLayer.getBounds();
-        map.fitBounds(pointsLayerBounds);
+
+        if (updateBbox) {
+            const pointsLayerBounds = pointsLayer.getBounds();
+            map.fitBounds(pointsLayerBounds);
+        }
     })
     .catch(error => {
         showResponsePopup(error.message)
@@ -244,7 +247,7 @@ function saveEdits() {
                     marker.update();
                 } else {
                     // update all points after new point creation
-                    fetchAllPoints(pointsLayer);
+                    fetchAllPoints();
                     map.closePopup();
                 }
                 closePanel();
