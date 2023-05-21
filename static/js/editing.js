@@ -248,7 +248,7 @@ function saveEdits() {
                 closePanel();
                 showResponsePopup("Data successfully updated.");
             } else {
-                throw new Error("Point update failed" + response.statusText);
+                throw new Error("Point update failed: " + response.statusText);
             }
         })
         .catch(error => {
