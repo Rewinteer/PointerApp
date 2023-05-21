@@ -177,7 +177,7 @@ def saveEdits():
     is_completed = request.get_json().get('is_completed')
 
     if id != 'null':
-        execute = executeQuery('UPDATE points SET attributes = %s, is_completed = %s WHERE id = %s AND user_id = %s', (attributes, is_completed, id, session["user_id"]))
+        execute = executeQuery('UPDATE points SET attributes = %s, is_completed = %s, modified = current_timestamp WHERE id = %s AND user_id = %s;', (attributes, is_completed, id, session["user_id"]))
         if execute == 1:
             return "Database error, please try one more time", 500
     # new points creation
@@ -211,7 +211,7 @@ def listPointUpdate():
     for id in attributesData:
         attributes = json.dumps(attributesData[id])
         is_completed = completenessData[id]
-        query = "UPDATE points SET attributes = '%s', is_completed = %s WHERE id = %s AND user_id = %s; " % (attributes, is_completed, id, session["user_id"])
+        query = "UPDATE points SET attributes = '%s', is_completed = %s, modified = current_timestamp WHERE id = %s AND user_id = %s; " % (attributes, is_completed, id, session["user_id"])
         dbQuery += query
 
     try:
