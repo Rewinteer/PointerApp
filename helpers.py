@@ -3,6 +3,24 @@ import os
 
 from flask import session, redirect
 from functools import wraps
+from urllib.parse import urlparse 
+
+url = os.environ['DB_URL']
+parsed_url = urlparse(url)
+database = parsed_url.path[1:]
+user = parsed_url.username
+password = parsed_url.password
+host = parsed_url.hostname
+port = parsed_url.port
+
+def get_db_connection():
+    conn = psycopg2.connect(
+        database=database,
+        user=user,
+        password=password,
+        host=host,
+        port=port)
+    return conn
 
 def login_required(f):
     @wraps (f)
@@ -12,13 +30,13 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def get_db_connection():
-    conn = psycopg2.connect(
-        host="localhost",
-        database="test",
-        user=os.environ['DB_USERNAME'],
-        password=os.environ['DB_PASSWORD'])
-    return conn
+# def get_db_connection():
+#     conn = psycopg2.connect(
+#         host="localhost",
+#         database="test",
+#         user=os.environ['DB_USERNAME'],
+#         password=os.environ['DB_PASSWORD'])
+#     return conn
 
 def executeQuery(query, placeholdersTuple):
     try:
