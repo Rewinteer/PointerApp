@@ -110,7 +110,12 @@ def index():
 @app.route("/points")
 @login_required
 def points():
-    rows = getDbRows('SELECT id, ST_AsGeoJSON(ST_FlipCoordinates(location)), attributes, is_completed FROM points WHERE user_id = %s;', (session["user_id"],))
+    rows = getDbRows("""
+    SELECT id, ST_AsGeoJSON(ST_FlipCoordinates(location)), attributes, is_completed 
+    FROM points 
+    WHERE user_id = %s;
+    """, (session["user_id"],))
+
     if rows is None:
         return "Database error", 500
 
@@ -179,13 +184,21 @@ def saveEdits():
     location = json.loads(request.get_json().get('location'))
     is_completed = request.get_json().get('is_completed')
 
+    # point data update
     if id != 'null':
-        execute = executeQuery('UPDATE points SET attributes = %s, is_completed = %s, modified = current_timestamp WHERE id = %s AND user_id = %s;', (attributes, is_completed, id, session["user_id"]))
+        execute = executeQuery("""
+        UPDATE points SET attributes = %s, is_completed = %s, modified = current_timestamp 
+        WHERE id = %s AND user_id = %s;
+        """, (attributes, is_completed, id, session["user_id"]))
         if execute == 1:
             return "Database error, please try one more time", 500
+        
     # new points creation
     else:
-        execute = executeQuery("INSERT INTO points(location, user_id, attributes, is_completed) VALUES (ST_GeomFromText('POINT(%s %s)'), %s, %s, %s);", (location['lat'], location['lng'], session["user_id"], attributes, is_completed))
+        execute = executeQuery("""
+        INSERT INTO points(location, user_id, attributes, is_completed) 
+        VALUES (ST_GeomFromText('POINT(%s %s)'), %s, %s, %s);
+        """, (location['lat'], location['lng'], session["user_id"], attributes, is_completed))
         if execute == 1:
             return "Database error, please try one more time", 500
 
@@ -210,21 +223,35 @@ def listPointUpdate():
     attributesData = newData.get('attributes')
     completenessData = newData.get('is_completed')
 
-    dbQuery = ""
-    for id in attributesData:
-        attributes = json.dumps(attributesData[id])
-        is_completed = completenessData[id]
-        query = "UPDATE points SET attributes = '%s', is_completed = %s, modified = current_timestamp WHERE id = %s AND user_id = %s; " % (attributes, is_completed, id, session["user_id"])
-        dbQuery += query
-
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute(dbQuery)
-        conn.commit()
+
+        for id in attributesData:
+            attributes = json.dumps(attributesData[id])
+            is_completed = completenessData[id]
+            try:
+                cur.execute("""
+                    UPDATE points SET attributes = %(attr)s, is_completed = %(compl)s, modified = current_timestamp 
+                    WHERE id = %(id)s AND user_id = %(us_id)s 
+                    AND (attributes::jsonb <> %(attr)s::jsonb OR is_completed <> %(compl)s);
+                """, 
+                {
+                    'attr': attributes, 
+                    'compl': is_completed, 
+                    'id': id, 
+                    'us_id': session["user_id"]
+                })
+            
+            except Exception as e:
+                return e, 500
+
+            conn.commit()
+
         cur.close()
         conn.close()
         return "Data successfully updated"
+
     except:
         return "Database error, please try one more time", 500
 
@@ -241,7 +268,10 @@ def removeAllPoints():
 @app.route("/exportData", methods=["POST"])
 @login_required
 def exportData():
-    rows = getDbRows("SELECT id, ST_X(ST_FlipCoordinates(location)), ST_Y(ST_FlipCoordinates(location)), attributes, is_completed, CAST(modified as TEXT) FROM points WHERE user_id=%s;", (session["user_id"],))
+    rows = getDbRows("""
+    SELECT id, ST_X(ST_FlipCoordinates(location)), ST_Y(ST_FlipCoordinates(location)), attributes, is_completed, CAST(modified as TEXT) 
+    FROM points WHERE user_id=%s;
+    """, (session["user_id"],))
     if rows is None:
         return "Database error", 500
     
@@ -253,8 +283,10 @@ def exportData():
 
         content_type = 'application/json'
         return send_file(temp_file_path, mimetype=content_type, as_attachment=True, download_name='points.geojson')
+    
     except:
         return "Server error", 500
+    
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)

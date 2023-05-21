@@ -25,8 +25,6 @@ def executeQuery(query, placeholdersTuple):
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(query, placeholdersTuple)
-        print(query)
-        print(placeholdersTuple)
         conn.commit()
         cur.close()
         conn.close()
