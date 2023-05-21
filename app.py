@@ -19,8 +19,8 @@ app.config["PERMANENT_SESSION_LIFETIME"] = 1209600
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-if __name__ == '__main__':
-    app.run(debug=True, port=8000, host='127.0.0.1')
+# if __name__ == '__main__':
+#     app.run(debug=True, port=8000, host='127.0.0.1')
 
 
 @app.route("/register", methods=["GET", "POST"])
