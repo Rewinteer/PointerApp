@@ -3,7 +3,7 @@ import psycopg2
 import json
 import tempfile
 
-from flask import Flask, redirect, render_template, jsonify, request, session, flash, send_file, make_response
+from flask import Flask, redirect, render_template, jsonify, request, session, flash, send_file
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
