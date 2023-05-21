@@ -32,9 +32,17 @@ document.addEventListener("DOMContentLoaded", function() {
                         'id': `${pointId}`
                     })
                 })
-                .then(() => {
-                    const rowToRemove = event.target.closest('tr');
-                    rowToRemove.remove();
+                .then(response => {
+                    if (response.ok) {
+                        const rowToRemove = event.target.closest('tr');
+                        rowToRemove.remove();
+                        showResponsePopup("Success");
+                    } else {
+                        throw new Error("Point removal error: " + response.statusText)
+                    }   
+                })
+                .catch(error => {
+                    showResponsePopup(error.message);
                 });
             }
         }
@@ -77,12 +85,23 @@ function saveListEdits() {
                 'attributes': pointsData,
                 'is_completed': isCompleted
             })
+        })
+        .then(response => {
+            if (response.ok) {
+                showResponsePopup("Data successfully updated.");
+            } else {
+                throw new Error("Data update error: " + response.statusText)
+            }
+        })
+        .catch(error => {
+            showResponsePopup(error.message)
         });
     }
 }
 
 function discardListEdits() {
     location.reload();
+    showResponsePopup("Attributes edits were discarded.");
 }
 
 function removeAllPoints() {
@@ -94,8 +113,16 @@ function removeAllPoints() {
                 'Content-Type': 'application/json'
             },
         })
-        .then(() => {
-            location.reload();
+        .then(response => {
+            if (response.ok) {
+                showResponsePopup("All points were removed.");
+                location.reload();
+            } else {
+                throw new Error("Removal error: ", response.statusText);
+            }
+        })
+        .catch(error => {
+            showResponsePopup(error.message)
         });
     }
 }

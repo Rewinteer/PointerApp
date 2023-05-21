@@ -52,7 +52,13 @@ map.on('contextmenu', (event) => {
 // add points from db to the map
 function fetchAllPoints(pointsLayer) {
     fetch('/points')
-    .then(response => response.json())
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Points loading failed: ' + response.statusText);
+        }
+    })
     .then(points => {
         if (pointsLayer != null) {
             pointsLayer.clearLayers();
@@ -66,11 +72,6 @@ function fetchAllPoints(pointsLayer) {
 
                 div = fillPopup(div, featureId, attributes);
 
-                // const iconOptions = {
-                //     iconUrl: isCompleted ? "static/icons/marker-green.png" : "static/icons/marker-blue.png"
-                // };
-
-                // const markerIcon = L.icon(iconOptions)
                 const markerIcon = getMarkerIcon(isCompleted);
                 const marker = L.marker(latlng, { icon: markerIcon }).bindPopup(div);
 
@@ -78,7 +79,11 @@ function fetchAllPoints(pointsLayer) {
                 return marker;
             }
         });
+        
         pointsLayer.addTo(map);
+    })
+    .catch(error => {
+        showResponsePopup(error.message)
     });
 }
 
@@ -135,7 +140,13 @@ function editClick(featureId) {
             'id': `${featureId}`
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.ok) {
+            return response.json()
+        } else {
+            throw new Error("Can't load data: " + response.statusText)
+        }
+    })
     .then(pointData => {
         let attributes = pointData.attributes;
         let isCompleted = pointData.is_completed;
@@ -147,6 +158,9 @@ function editClick(featureId) {
 
         let checkbox = document.getElementById("is-completed-chk");
         checkbox.checked = isCompleted;
+    })
+    .catch(error => {
+        showResponsePopup(error.message);
     });
 }
 
@@ -212,33 +226,43 @@ function saveEdits() {
                 'is_completed': `${isCompleted}`
             })
         })
-        .then(() => {
-            const marker = markers[selectedNodeId];
-            if (marker) {
-                // update popup of the updated marker
-                let div = document.createElement("div");
-                div = fillPopup(div, selectedNodeId, attributesData);
-                marker.setPopupContent(div);
-                marker.bindPopup(div);
-
-                const markerIcon = getMarkerIcon(isCompleted);
-                marker.setIcon(markerIcon);
-
-                marker.update();
+        .then(response => {
+            if (response.ok) {
+                const marker = markers[selectedNodeId];
+                if (marker) {
+                    // update popup of the updated marker
+                    let div = document.createElement("div");
+                    div = fillPopup(div, selectedNodeId, attributesData);
+                    marker.setPopupContent(div);
+                    marker.bindPopup(div);
+    
+                    const markerIcon = getMarkerIcon(isCompleted);
+                    marker.setIcon(markerIcon);
+    
+                    marker.update();
+                } else {
+                    // update all points after new point creation
+                    fetchAllPoints(pointsLayer);
+                    map.closePopup();
+                }
+                closePanel();
+                showResponsePopup("Data successfully updated.");
             } else {
-                // update all points after new point creation
-                fetchAllPoints(pointsLayer);
-                map.closePopup();
+                throw new Error("Point update failed" + response.statusText);
             }
-            closePanel();
+        })
+        .catch(error => {
+            showResponsePopup(error.message);
         });
     }
 }
 
 // close editing panel
 function closePanel() {
-    let editPanel = document.getElementById("edit-panel");
+    const editPanel = document.getElementById("edit-panel");
+    const checkbox = document.getElementById("is-completed-chk");
     editPanel.classList.toggle('show');
+    checkbox.checked = false;
     selectedLocation = null;
 }
 
@@ -264,12 +288,19 @@ function removePoint() {
                     'id': `${selectedNodeId}`
                 })
             })
-            .then(() => {
-                const marker = markers[selectedNodeId];
-                if (marker) {
-                    marker.remove();
-                    closePanel();
+            .then(response => {
+                if (response.ok) {
+                    const marker = markers[selectedNodeId];
+                    if (marker) {
+                        marker.remove();
+                        closePanel();
+                    }
+                } else {
+                    throw new Error("Point removal failed" + response.statusText);
                 }
+            })
+            .catch(error => {
+                showResponsePopup(error.message)
             });
         }
     // if unsaved point selected (during creation)
@@ -277,7 +308,6 @@ function removePoint() {
         closePanel();
         map.closePopup();
     }
-    
 }
 
 // create new point

@@ -70,6 +70,7 @@ nav .navbar-brand .green
     margin-top: 20px;
 }
 
+
 .btn-custom {
     padding: 0.10rem 0.2rem;
     font-size: 0.75rem;
@@ -82,4 +83,17 @@ nav .navbar-brand .green
 
 .textarea-list {
     margin-right: 10px;
+}
+
+#response-popup-container {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f2f2f2;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: none;
+    z-index: 9999;
 }
