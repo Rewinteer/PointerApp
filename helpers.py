@@ -57,3 +57,32 @@ def usernameAlreadyExists(username):
         return len(rows) > 0
     else:
         return rows
+    
+def getFeatureCollection(rows):
+    outfile = {
+        "type": "FeatureCollection",
+        "features": []
+    }
+
+    for row in rows:
+        # row schema: id | location_x | location_y | attributes | is_completed | modified 
+        feature = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": []
+            },
+            "properties": {}
+        }
+
+        feature["properties"]["id"] = row[0]
+        feature["geometry"]["coordinates"].append(row[1])
+        feature["geometry"]["coordinates"].append(row[2])
+        for attribute in row[3]:
+            feature["properties"][attribute] = row[3][attribute]
+        feature["properties"]["is_completed"] = row[4]
+        feature["properties"]["modified"] = row[5]
+
+        outfile["features"].append(feature)
+    
+    return(outfile)

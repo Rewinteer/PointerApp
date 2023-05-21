@@ -1,15 +1,15 @@
 import os
 import psycopg2
 import json
+import tempfile
 
-from flask import Flask, redirect, render_template, jsonify, request, session, flash
+from flask import Flask, redirect, render_template, jsonify, request, session, flash, send_file, make_response
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required, get_db_connection, usernameAlreadyExists, getDbRows, executeQuery
+from helpers import login_required, get_db_connection, usernameAlreadyExists, getDbRows, executeQuery, getFeatureCollection
 
 app = Flask(__name__)
-app.debug = True
 app.secret_key = os.environ["SECRET_KEY"]
 
 # configure session
@@ -18,6 +18,9 @@ app.config["SESSION_PERMANENT"] = True
 app.config["PERMANENT_SESSION_LIFETIME"] = 1209600
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=8000, host='127.0.0.1')
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -80,7 +83,7 @@ def login():
         
         rows = getDbRows("SELECT * FROM users WHERE username = %s", (request.form.get("username"), ))
 
-        if rows == None:
+        if rows is None:
             flash('Database error. Please try one more time', 'error')
             return redirect("/login")
         elif len(rows) != 1 or not check_password_hash(rows[0][2], request.form.get("password")):
@@ -108,7 +111,7 @@ def index():
 @login_required
 def points():
     rows = getDbRows('SELECT id, ST_AsGeoJSON(ST_FlipCoordinates(location)), attributes, is_completed FROM points WHERE user_id = %s;', (session["user_id"],))
-    if rows == None:
+    if rows is None:
         return "Database error", 500
 
     features = []
@@ -136,7 +139,7 @@ def points():
 def pointData():
     id = request.get_json().get('id')
     rows = getDbRows("SELECT id, user_id, attributes, is_completed FROM points WHERE id=%s AND user_id=%s;", (id,session["user_id"]))
-    if rows == None:
+    if rows is None:
         return "Database error", 500
     
     dbresponse = rows[0]
@@ -157,7 +160,7 @@ def removePoint():
 
     # user_id check
     rows = getDbRows('SELECT user_id FROM points WHERE id=%s', (id,))
-    if rows == None:
+    if rows is None:
         return "Database error, please try one more time", 500
     elif user_id != rows[0][0]:
         return "Wrong point ID", 400
@@ -193,7 +196,7 @@ def saveEdits():
 @login_required
 def pointList():
     rows = getDbRows("SELECT id, attributes, is_completed FROM points WHERE user_id = %s ORDER BY id;", (session["user_id"], ))
-    if rows == None:
+    if rows is None:
         return "Database error, please try one more time", 500
     
     pointsData = rows
@@ -234,3 +237,24 @@ def removeAllPoints():
         return "Database error, please try one more time", 500
 
     return "Data successfully removed"
+
+@app.route("/exportData", methods=["POST"])
+@login_required
+def exportData():
+    rows = getDbRows("SELECT id, ST_X(ST_FlipCoordinates(location)), ST_Y(ST_FlipCoordinates(location)), attributes, is_completed, CAST(modified as TEXT) FROM points WHERE user_id=%s;", (session["user_id"],))
+    if rows is None:
+        return "Database error", 500
+    
+    try:
+        data = getFeatureCollection(rows)
+        temp_file_path = tempfile.mkstemp(suffix='.json')[1]
+        with open(temp_file_path, 'w') as file:
+            file.write(jsonify(data).get_data(as_text=True))
+
+        content_type = 'application/json'
+        return send_file(temp_file_path, mimetype=content_type, as_attachment=True, download_name='points.geojson')
+    except:
+        return "Server error", 500
+    finally:
+        if temp_file_path and os.path.exists(temp_file_path):
+            os.remove(temp_file_path)

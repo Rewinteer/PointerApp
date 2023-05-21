@@ -126,3 +126,34 @@ function removeAllPoints() {
         });
     }
 }
+
+function exportData() {
+    if (window.confirm(`Please ensure that you saved all necessary edits before export. Do you want to proceed?`)) {
+                    
+        fetch('/exportData', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                const filename = response.headers.get('Content-Disposition').split('=')[1];
+                response.blob().then(blob => {
+                    const url = URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                });
+            } else {
+                throw new Error("Export error: ", response.statusText);
+            }
+        })
+        .catch(error => {
+            showResponsePopup(error.message)
+        });
+    }
+}
