@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", function() {
             let pointId = event.target.dataset.targetId;
             if (window.confirm(`Are you sure you want to remove the point with ID = ${pointId}? This action cannot be reversed.`)) {
                     
+                showLoadingOverlay();
                 fetch('/removePoint', {
                     method: 'POST',
                     headers: {
@@ -37,12 +38,14 @@ document.addEventListener("DOMContentLoaded", function() {
                         const rowToRemove = event.target.closest('tr');
                         rowToRemove.remove();
                         showResponsePopup("Success");
+                        closeLoadingOverlay();
                     } else {
                         throw new Error("Point removal error: " + response.statusText)
                     }   
                 })
                 .catch(error => {
                     showResponsePopup(error.message);
+                    closeLoadingOverlay();
                 });
             }
         }
@@ -75,7 +78,8 @@ function saveListEdits() {
     }
 
     if (window.confirm(`Are you sure you want to save your attributes edits?`)) {
-                    
+        
+        showLoadingOverlay();
         fetch('/listPointsUpdate', {
             method: 'POST',
             headers: {
@@ -89,12 +93,14 @@ function saveListEdits() {
         .then(response => {
             if (response.ok) {
                 showResponsePopup("Data successfully updated.");
+                closeLoadingOverlay();
             } else {
                 throw new Error("Data update error: " + response.statusText)
             }
         })
         .catch(error => {
-            showResponsePopup(error.message)
+            showResponsePopup(error.message);
+            closeLoadingOverlay();
         });
     }
 }
@@ -106,7 +112,8 @@ function discardListEdits() {
 
 function removeAllPoints() {
     if (window.confirm(`Are you sure you want to remove ALL points? This action cannot be reversed.`)) {
-                    
+        
+        showLoadingOverlay();
         fetch('/removeAllPoints', {
             method: 'POST',
             headers: {
@@ -117,19 +124,22 @@ function removeAllPoints() {
             if (response.ok) {
                 showResponsePopup("All points were removed.");
                 location.reload();
+                closeLoadingOverlay();
             } else {
                 throw new Error("Removal error: ", response.statusText);
             }
         })
         .catch(error => {
             showResponsePopup(error.message)
+            closeLoadingOverlay();
         });
     }
 }
 
 function exportData() {
     if (window.confirm(`Please ensure that you saved all necessary edits before export. Do you want to proceed?`)) {
-                    
+             
+        showLoadingOverlay();
         fetch('/exportData', {
             method: 'POST',
             headers: {
@@ -147,13 +157,15 @@ function exportData() {
                     link.download = filename;
                     link.click();
                     URL.revokeObjectURL(url);
+                    closeLoadingOverlay();
                 });
             } else {
                 throw new Error("Export error: ", response.statusText);
             }
         })
         .catch(error => {
-            showResponsePopup(error.message)
+            showResponsePopup(error.message);
+            closeLoadingOverlay();
         });
     }
 }

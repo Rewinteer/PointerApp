@@ -19,17 +19,13 @@ app.config["PERMANENT_SESSION_LIFETIME"] = 1209600
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# if __name__ == '__main__':
-#     app.run(debug=True, port=8000, host='127.0.0.1')
-
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         username = request.form.get("username")
         if 1 > len(username) > 255:
             flash('Incorrect username length', 'error')
-            return "Incorrect username length"
+            return redirect("/register")
         
         already_exists = usernameAlreadyExists(username)
         if already_exists != None and already_exists:
@@ -65,13 +61,13 @@ def register():
             flash(error_message, 'error')
             return redirect("/register")
 
-
     else:
         return render_template("register.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    session.clear()
+    if session.get('user_id'):
+        session.pop('user_id', None)
 
     if request.method == "POST":
         if not request.form.get("username"):
@@ -79,7 +75,7 @@ def login():
             return redirect("/login")
         elif not request.form.get("password"):
             flash('Must provide password', 'error')
-            return redirect("/login")
+            return render_template("login.html")
         
         rows = getDbRows("SELECT * FROM users WHERE username = %s", (request.form.get("username"), ))
 
@@ -290,3 +286,6 @@ def exportData():
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000, host='127.0.0.1')

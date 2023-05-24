@@ -51,6 +51,7 @@ map.on('contextmenu', (event) => {
 
 // add points from db to the map
 function fetchAllPoints(updateBbox = false) {
+    showLoadingOverlay();
     fetch('/points')
     .then(response => {
         if (response.ok) {
@@ -86,9 +87,11 @@ function fetchAllPoints(updateBbox = false) {
             const pointsLayerBounds = pointsLayer.getBounds();
             map.fitBounds(pointsLayerBounds);
         }
+        closeLoadingOverlay();
     })
     .catch(error => {
         showResponsePopup(error.message)
+        closeLoadingOverlay();
     });
 }
 
@@ -136,6 +139,7 @@ function editClick(featureId) {
     attributesTable.innerHTML = "";
 
     // receive point data from the server
+    showLoadingOverlay();
     fetch('/pointData', {
         method: 'POST',
         headers: {
@@ -163,9 +167,11 @@ function editClick(featureId) {
 
         let checkbox = document.getElementById("is-completed-chk");
         checkbox.checked = isCompleted;
+        closeLoadingOverlay();
     })
     .catch(error => {
         showResponsePopup(error.message);
+        closeLoadingOverlay();
     });
 }
 
@@ -218,7 +224,8 @@ function saveEdits() {
     const isCompleted = checkbox.checked;
 
     if (window.confirm('Are you sure you want to save edits?')) {
-                    
+
+        showLoadingOverlay();            
         fetch('/saveEdits', {
             method: 'POST',
             headers: {
@@ -252,12 +259,14 @@ function saveEdits() {
                 }
                 closePanel();
                 showResponsePopup("Data successfully updated.");
+                closeLoadingOverlay();
             } else {
                 throw new Error("Point update failed: " + response.statusText);
             }
         })
         .catch(error => {
             showResponsePopup(error.message);
+            closeLoadingOverlay();
         });
     }
 }
@@ -284,6 +293,7 @@ function removePoint() {
     if (selectedNodeId) {
         if (window.confirm(`Are you sure you want to remove the point with ID = ${selectedNodeId}?`)) {
                     
+            showLoadingOverlay();
             fetch('/removePoint', {
                 method: 'POST',
                 headers: {
@@ -299,6 +309,7 @@ function removePoint() {
                     if (marker) {
                         marker.remove();
                         closePanel();
+                        closeLoadingOverlay();
                     }
                 } else {
                     throw new Error("Point removal failed" + response.statusText);
@@ -306,6 +317,7 @@ function removePoint() {
             })
             .catch(error => {
                 showResponsePopup(error.message)
+                closeLoadingOverlay();
             });
         }
     // if unsaved point selected (during creation)

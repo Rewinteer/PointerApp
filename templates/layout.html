@@ -22,7 +22,9 @@
     </head>
 
     <body>
-
+        <div id="loading-overlay">
+            <div class="loader"></div>
+        </div>
         <nav class="bg-light border navbar navbar-expand-md navbar-light" id="nav">
             <div class="container-fluid">
                 <div class="collapse navbar-collapse" id="navbar">
@@ -43,7 +45,13 @@
                 </div>
             </div>
         </nav>
+
         {% block body %}{% endblock %}
+
+        <main class="container-fluid py-5 text-center">
+            {% block main %}{% endblock %}
+        </main>
+        <div id="response-popup-container"></div>
 
         {% if get_flashed_messages() %}
             <header>
@@ -52,11 +60,6 @@
                 </div>
             </header>
         {% endif %}
-
-        <main class="container-fluid py-5 text-center">
-            {% block main %}{% endblock %}
-        </main>
-        <div id="response-popup-container"></div>
     </body>
 
 </html>
