@@ -186,7 +186,7 @@ function fillRows(tableBody, key, value) {
     </div>`;
     newValue.innerHTML = `
     <div class="d-flex align-items-center">
-        <textarea rows="1" cols="25">${value}</textarea>
+        <textarea rows="1" placeholder="Value" cols="25">${value}</textarea>
         <button type="button" class="btn btn-danger btn-sm btn-smaller remove-row">Remove row</button>
     </div>`;
 }
