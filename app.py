@@ -287,5 +287,54 @@ def exportData():
         if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
+@app.route("/importData", methods=["POST"])
+@login_required
+def importData():
+    if 'files' not in request.files:
+        return "No file found", 400
+    
+    files = request.files.getlist('files')
+    if not files:
+        return "No files selected", 400
+    
+    for file in files:
+        if file.filename == '':
+            continue
+
+        if not file.filename.endswith('.geojson'):
+            return "Invalid file extension", 400
+        
+        try:
+            data = json.load(file)
+
+            if 'type' not in data or data['type'] != 'FeatureCollection':
+                return 'Invalid GeoJSON content', 400
+            
+            for feature in data['features']:
+                if feature['geometry']['type'] != 'Point':
+                    return 'The application works with points data only', 400
+                
+                coordindates = feature['geometry']['coordinates']
+                attributes = json.dumps(feature['properties'])
+
+                execute = executeQuery("""
+                    INSERT INTO points(location, user_id, attributes) 
+                    VALUES (ST_GeomFromText('POINT(%s %s)'), %s, %s);
+                    """, (coordindates[1], coordindates[0], session["user_id"], attributes))
+                
+                if execute == 1:
+                    raise Exception("Database error")
+
+        except json.JSONDecodeError:
+            return 'Invalid JSON format', 400
+        
+        except Exception as e:
+            return str(e), 500
+    
+    return "Data successfully imported"
+
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='127.0.0.1')

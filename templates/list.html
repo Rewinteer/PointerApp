@@ -48,9 +48,16 @@
             {% endfor %}
         </tbody>
     </table>
-    <button type="button" class="btn btn-success" onclick="saveListEdits()">Save attributes edits</button>
-    <button type="button" class="btn btn-warning" onclick="discardListEdits()">Discard attributes edits</button>
-    <button type="button" class="btn btn-outline-info" onclick="exportData()">Export to GeoJSON</button>
+    <div id="scroll-to-bottom" class="scroll-to-bottom"></div>
+    <div>
+        <button type="button" class="btn btn-success" onclick="saveListEdits()">Save attributes edits</button>
+        <button type="button" class="btn btn-warning" onclick="discardListEdits()">Discard attributes edits</button>
+        <button type="button" class="btn btn-outline-info" onclick="exportData()">Export to GeoJSON</button>
+    </div>
+    <div class="mb-3" style="margin-top: 30px;">
+        <input class="form-control" type="file" id="fileImport" multiple>
+        <button type="button" class="btn btn-outline-info" onclick="importData()">Import from GeoJSON</button>
+    </div>
     <div style="margin-top: 30px;">
         <button type="button" class="btn btn-danger" onclick="removeAllPoints()">Remove all points</button>
     </div>

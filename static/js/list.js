@@ -1,4 +1,4 @@
-// attributes manipulation
+// listeners registration
 document.addEventListener("DOMContentLoaded", function() {
     let pointsTable = document.getElementById("points-table");
     pointsTable.addEventListener("click", function(event) {
@@ -49,6 +49,26 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
             }
         }
+    });
+    // scroll listener
+    window.addEventListener('scroll', function() {
+        var scrollPosition = window.scrollY || document.documentElement.scrollTop;
+        var scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        var scrollToBottom = document.getElementById('scroll-to-bottom');
+        
+        if (scrollPosition > 0) {
+          scrollToBottom.style.display = 'block';
+        } else {
+          scrollToBottom.style.display = 'none';
+        }
+        
+        if (scrollPosition === scrollHeight) {
+          scrollToBottom.style.display = 'none';
+        }
+    });
+
+    document.getElementById('scroll-to-bottom').addEventListener('click', function() {
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
     });
 });
 
@@ -122,9 +142,9 @@ function removeAllPoints() {
         })
         .then(response => {
             if (response.ok) {
+                closeLoadingOverlay();
                 showResponsePopup("All points were removed.");
                 location.reload();
-                closeLoadingOverlay();
             } else {
                 throw new Error("Removal error: ", response.statusText);
             }
@@ -166,6 +186,46 @@ function exportData() {
         .catch(error => {
             showResponsePopup(error.message);
             closeLoadingOverlay();
+        });
+    }
+}
+
+function importData() {
+    if (window.confirm(`This application imports only points data stored in GeoJSON files with default WGS84 (EPSG:4326) CRS. Please ensure that your files correspond to these requirements. Do you want to proceed?`)) {
+        const fileElement = document.getElementById('fileImport')
+        if (fileElement.files.length === 0) {
+            alert('Please choose at least 1 file.');
+            return
+        }
+
+        showLoadingOverlay();
+        const files = Array.from(fileElement.files);
+        let formData = new FormData();
+        files.forEach(file => {
+            formData.append('files', file);
+        })
+
+        fetch('/importData', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => {
+            if (response.ok) {
+                closeLoadingOverlay();
+                showResponsePopup("Data successfully imported.");
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                throw new Error("Import error: " + response.statusText);
+            }
+        })
+        .catch(error => {
+            closeLoadingOverlay();
+            showResponsePopup(error.message);
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
         });
     }
 }
