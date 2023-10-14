@@ -68,10 +68,11 @@ function fetchAllPoints(updateBbox = false) {
             pointToLayer: (feature, latlng) => {
                 let div = document.createElement("div");
                 let featureId = feature.properties.id;
+                let name = feature.properties.name;
                 let attributes = feature.properties.attributes;
                 let isCompleted = feature.properties.is_completed;
 
-                div = fillPopup(div, featureId, attributes);
+                div = fillPopup(div, name, featureId, attributes);
 
                 const markerIcon = getMarkerIcon(isCompleted);
                 const marker = L.marker(latlng, { icon: markerIcon }).bindPopup(div);
@@ -108,10 +109,22 @@ function getMarkerIcon(isCompleted) {
 }
 
 // fill marker popup
-function fillPopup(div, featureId, attributes) {
-    div.innerHTML = `<b>ID = ${featureId}</b>`;
+function fillPopup(div, name, featureId, attributes) {
+    div.innerHTML = `<b>Name: ${name}</b><br>id: ${featureId}<br><br><b>Attributes:</b>`;
+
+    // popup text
+    const maxAttrcount = 3;
+    let counter = 0;
     for (const key in attributes) {
-        div.innerHTML += `<br>${key} = ${attributes[key]}`;
+            if (counter == 3) {
+                div.innerHTML += `<br>...`;
+                break;
+            }
+            div.innerHTML += `<br>${key} = ${attributes[key]}`;
+            counter++;
+    }
+    if (counter == 0) {
+        div.innerHTML += `<br>no data`;
     }
     
     const buttonDiv = document.createElement("div");
@@ -157,9 +170,13 @@ function editClick(featureId) {
         }
     })
     .then(pointData => {
+        let name = pointData.name;
         let attributes = pointData.attributes;
         let isCompleted = pointData.is_completed;
         
+        let nameRow = document.getElementById("name-input");
+        nameRow.value = name;
+
         // fill editing table
         for (const attribute in attributes) {
             fillRows(attributesTable, attribute, attributes[attribute]);
@@ -217,11 +234,14 @@ function getAttributesData() {
 
 // save attributes changes
 function saveEdits() {
-    const attributesData = getAttributesData()
+    const attributesData = getAttributesData();
     const jsonData = JSON.stringify(attributesData);
     
     const checkbox = document.getElementById("is-completed-chk");
     const isCompleted = checkbox.checked;
+
+    const nameRow = document.getElementById("name-input");
+    const name = nameRow.value;
 
     if (window.confirm('Are you sure you want to save edits?')) {
 
@@ -233,6 +253,7 @@ function saveEdits() {
             },
             body: JSON.stringify({
                 'id': `${selectedNodeId}`,
+                'name': `${name}`,
                 'attributes': `${jsonData}`,
                 'location': `${selectedLocation}`,
                 'is_completed': `${isCompleted}`
@@ -244,7 +265,7 @@ function saveEdits() {
                 if (marker) {
                     // update popup of the updated marker
                     let div = document.createElement("div");
-                    div = fillPopup(div, selectedNodeId, attributesData);
+                    div = fillPopup(div, name, selectedNodeId, attributesData);
                     marker.setPopupContent(div);
                     marker.bindPopup(div);
     
@@ -275,8 +296,11 @@ function saveEdits() {
 function closePanel() {
     const editPanel = document.getElementById("edit-panel");
     const checkbox = document.getElementById("is-completed-chk");
+    const nameRow = document.getElementById("name-input");
+    
     editPanel.classList.toggle('show');
     checkbox.checked = false;
+    nameRow.value = null;
     selectedLocation = null;
 }
 

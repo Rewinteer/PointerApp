@@ -8,15 +8,23 @@
         <thead>
             <tr>
                 <th scope="col">ID</th>
+                <th scpe="col">Name</th>
                 <th scope="col" style="padding-left: 50px;">Attributes</th>
-                <th scope="col">Completed</th>
+                <th scope="col">Completion</th>
             </tr>
         </thead>
         <tbody>
             {% for row in pointsData %}
-                <tr class="point-row" data-element-id="{{ row[0] }}" data-completed="{{ row[2] }}">
-                    <th scope="row" class="list-point-id">#{{ row[0] }}</th>
-                    {% set attributes = row[1] %}
+            <!-- row schema: id, name, attributes, is_completed -->
+                <tr class="point-row" data-element-id="{{ row[0] }}" data-completed="{{ row[3] }}">
+                    <td scope="row" class="list-point-id">#{{ row[0] }}</td>
+                    <th>
+                        <div>
+                            <b style="margin-right: 15;">Name: </b>
+                            <input size="20" type="text" placeholder="Key" value="{{ row[1] }}" class="input-point-name">
+                        </div>
+                    </th>
+                    {% set attributes = row[2] %}
                     <td>
                         <div class="point-attr-row">
                             <div class="list-point-attrs">
@@ -36,7 +44,7 @@
                     </td>
                     <td class="checkbox-cell" style="text-align: center;">
                         <div class="form-check form-switch" style="padding-bottom: 5px; float: right;">
-                            {% if row[2] %}
+                            {% if row[3] %}
                                 <input class="form-check-input list-checkbox" type="checkbox" checked>
                             {% else %}
                                 <input class="form-check-input list-checkbox" type="checkbox">

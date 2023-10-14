@@ -79,12 +79,14 @@ function saveListEdits() {
 
     let pointsData = {};
     let isCompleted = {};
+    let pointNames = {};
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const attrDivs = row.getElementsByClassName("list-point-attr");
 
         const pointId = row.getAttribute('data-element-id');
-        const checkbox = row.querySelector(".list-checkbox")
+        const pointName = row.querySelector('.input-point-name').value;
+        const checkbox = row.querySelector(".list-checkbox");
         const completed = checkbox.checked;
         let pointAttrs = {};
         for (let j = 0; j < attrDivs.length; j++) {
@@ -94,7 +96,8 @@ function saveListEdits() {
             pointAttrs[key] = value;
         }
         pointsData[pointId] = pointAttrs;
-        isCompleted[pointId] = completed;      
+        isCompleted[pointId] = completed;
+        pointNames[pointId] = pointName;      
     }
 
     if (window.confirm(`Are you sure you want to save your attributes edits?`)) {
@@ -107,7 +110,8 @@ function saveListEdits() {
             },
             body: JSON.stringify({
                 'attributes': pointsData,
-                'is_completed': isCompleted
+                'is_completed': isCompleted,
+                'names' : pointNames
             })
         })
         .then(response => {
@@ -115,7 +119,7 @@ function saveListEdits() {
                 showResponsePopup("Data successfully updated.");
                 closeLoadingOverlay();
             } else {
-                throw new Error("Data update error: " + response.statusText)
+                throw new Error("Data update error: " + response.text)
             }
         })
         .catch(error => {
@@ -191,7 +195,7 @@ function exportData() {
 }
 
 function importData() {
-    if (window.confirm(`This application imports only points data stored in GeoJSON files with default WGS84 (EPSG:4326) CRS. Please ensure that your files correspond to these requirements. Do you want to proceed?`)) {
+    if (window.confirm(`This application imports only points data stored in GeoJSON files with default WGS84 (EPSG:4326) CRS. The header of the 'name' column should be in lowercase, name shouldn't exceed 30 characters. Please ensure that your files correspond to these requirements. Do you want to proceed?`)) {
         const fileElement = document.getElementById('fileImport')
         if (fileElement.files.length === 0) {
             alert('Please choose at least 1 file.');

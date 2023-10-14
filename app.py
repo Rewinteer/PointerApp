@@ -7,7 +7,7 @@ from flask import Flask, redirect, render_template, jsonify, request, session, f
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required, get_db_connection, usernameAlreadyExists, getDbRows, executeQuery, getFeatureCollection
+from helpers import login_required, get_db_connection, usernameAlreadyExists, getDbRows, executeQuery, getFeatureCollection, passCurrentDataToHistory
 
 app = Flask(__name__)
 app.secret_key = os.environ["SECRET_KEY"]
@@ -107,7 +107,7 @@ def index():
 @login_required
 def points():
     rows = getDbRows("""
-    SELECT id, ST_AsGeoJSON(ST_FlipCoordinates(location)), attributes, is_completed 
+    SELECT id, name, ST_AsGeoJSON(ST_FlipCoordinates(location)), attributes, is_completed 
     FROM points 
     WHERE user_id = %s;
     """, (session["user_id"],))
@@ -120,11 +120,12 @@ def points():
         feature = {
             "type": "Feature",
             "properties": {
-                "id": row[0], 
-                "attributes": row[2],
-                "is_completed": row[3]
+                "id": row[0],
+                "name": row[1], 
+                "attributes": row[3],
+                "is_completed": row[4]
             },
-            "geometry": json.loads(row[1])
+            "geometry": json.loads(row[2])
         }
         features.append(feature)
     
@@ -139,16 +140,17 @@ def points():
 @login_required
 def pointData():
     id = request.get_json().get('id')
-    rows = getDbRows("SELECT id, user_id, attributes, is_completed FROM points WHERE id=%s AND user_id=%s;", (id,session["user_id"]))
+    rows = getDbRows("SELECT id, name, user_id, attributes, is_completed FROM points WHERE id=%s AND user_id=%s;", (id,session["user_id"]))
     if rows is None:
         return "Database error", 500
     
     dbresponse = rows[0]
     responseToSend = {
         'id': dbresponse[0],
-        'user_id': dbresponse[1],
-        'attributes': dbresponse[2],
-        'is_completed': dbresponse[3]
+        'name': dbresponse[1],
+        'user_id': dbresponse[2],
+        'attributes': dbresponse[3],
+        'is_completed': dbresponse[4]
     }
 
     return jsonify(responseToSend)
@@ -176,6 +178,7 @@ def removePoint():
 @login_required
 def saveEdits():
     id = request.get_json().get('id')
+    name = request.get_json().get('name')
     attributes = request.get_json().get('attributes')
     location = json.loads(request.get_json().get('location'))
     is_completed = request.get_json().get('is_completed')
@@ -183,18 +186,18 @@ def saveEdits():
     # point data update
     if id != 'null':
         execute = executeQuery("""
-        UPDATE points SET attributes = %s, is_completed = %s, modified = current_timestamp 
-        WHERE id = %s AND user_id = %s;
-        """, (attributes, is_completed, id, session["user_id"]))
+        UPDATE points SET name = %s, attributes = %s, is_completed = %s, modified = current_timestamp, version = version + 1 
+        WHERE id = %s AND user_id = %s AND (name <> %s OR attributes::jsonb <> %s::jsonb OR is_completed <> %s);
+        """, (name, attributes, is_completed, id, session["user_id"], name, attributes, is_completed))
         if execute == 1:
             return "Database error, please try one more time", 500
         
     # new points creation
     else:
         execute = executeQuery("""
-        INSERT INTO points(location, user_id, attributes, is_completed) 
-        VALUES (ST_GeomFromText('POINT(%s %s)'), %s, %s, %s);
-        """, (location['lat'], location['lng'], session["user_id"], attributes, is_completed))
+        INSERT INTO points(name, location, user_id, attributes, is_completed) 
+        VALUES (%s, ST_GeomFromText('POINT(%s %s)'), %s, %s, %s);
+        """, (name, location['lat'], location['lng'], session["user_id"], attributes, is_completed))
         if execute == 1:
             return "Database error, please try one more time", 500
 
@@ -204,7 +207,7 @@ def saveEdits():
 @app.route("/pointList")
 @login_required
 def pointList():
-    rows = getDbRows("SELECT id, attributes, is_completed FROM points WHERE user_id = %s ORDER BY id;", (session["user_id"], ))
+    rows = getDbRows("SELECT id, name, attributes, is_completed FROM points WHERE user_id = %s ORDER BY name;", (session["user_id"], ))
     if rows is None:
         return "Database error, please try one more time", 500
     
@@ -216,6 +219,7 @@ def pointList():
 @login_required
 def listPointUpdate():
     newData = request.get_json()
+    namesData = newData.get('names')
     attributesData = newData.get('attributes')
     completenessData = newData.get('is_completed')
 
@@ -224,15 +228,19 @@ def listPointUpdate():
         cur = conn.cursor()
 
         for id in attributesData:
+            name = namesData[id]
             attributes = json.dumps(attributesData[id])
             is_completed = completenessData[id]
             try:
+
+                # db trigger function checks if the new data differs from old, and uploads the history if yes
                 cur.execute("""
-                    UPDATE points SET attributes = %(attr)s, is_completed = %(compl)s, modified = current_timestamp 
+                    UPDATE points SET name = %(name)s, attributes = %(attr)s, is_completed = %(compl)s, modified = current_timestamp, version = version + 1 
                     WHERE id = %(id)s AND user_id = %(us_id)s 
-                    AND (attributes::jsonb <> %(attr)s::jsonb OR is_completed <> %(compl)s);
+                    AND (name <> %(name)s OR attributes::jsonb <> %(attr)s::jsonb OR is_completed <> %(compl)s);
                 """, 
                 {
+                    'name': name,
                     'attr': attributes, 
                     'compl': is_completed, 
                     'id': id, 
@@ -240,7 +248,7 @@ def listPointUpdate():
                 })
             
             except Exception as e:
-                return e, 500
+                return str(e), 500
 
             conn.commit()
 
@@ -265,7 +273,7 @@ def removeAllPoints():
 @login_required
 def exportData():
     rows = getDbRows("""
-    SELECT id, ST_X(ST_FlipCoordinates(location)), ST_Y(ST_FlipCoordinates(location)), attributes, is_completed, CAST(modified as TEXT) 
+    SELECT id, name, ST_X(ST_FlipCoordinates(location)), ST_Y(ST_FlipCoordinates(location)), attributes, is_completed, CAST(modified as TEXT) 
     FROM points WHERE user_id=%s;
     """, (session["user_id"],))
     if rows is None:
@@ -315,12 +323,20 @@ def importData():
                     return 'The application works with points data only', 400
                 
                 coordindates = feature['geometry']['coordinates']
-                attributes = json.dumps(feature['properties'])
+                # attributes = json.dumps(feature['properties'])
+                attributes = feature['properties']
+                name = None
 
+                # if the file contain name column - assign value to the name
+                if 'name' in attributes:
+                    name = attributes['name']
+                    del attributes['name']
+
+                attributes = json.dumps(attributes)
                 execute = executeQuery("""
-                    INSERT INTO points(location, user_id, attributes) 
-                    VALUES (ST_GeomFromText('POINT(%s %s)'), %s, %s);
-                    """, (coordindates[1], coordindates[0], session["user_id"], attributes))
+                    INSERT INTO points(name, location, is_completed, user_id, attributes) 
+                    VALUES (%s, ST_GeomFromText('POINT(%s %s)'), %s, %s);
+                    """, (name, coordindates[1], coordindates[0], session["user_id"], attributes))
                 
                 if execute == 1:
                     raise Exception("Database error")
