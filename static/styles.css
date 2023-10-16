@@ -160,9 +160,30 @@ nav .navbar-brand .green
 /* tables */
 td, th {
     text-align: center;
+    justify-content: center;
 }
 
 .list-point-attrs {
     display: flex;
     flex-direction: column;
+}
+
+.point-attr-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.list-point-attr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.row-button-group {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 15px;
+    margin-left: 40px; 
 }
