@@ -361,3 +361,12 @@ function createPoint(coordinates) {
     selectedLocation = JSON.stringify(coordinates);
     editPanel.classList.toggle('show');
 }
+
+function getMapHistory() {
+    console.log(selectedNodeId);
+    var form = document.getElementById('historyForm');
+    var input = form.querySelector('input[id="history_input"]');
+    input.value = selectedNodeId;
+    console.log(input.value);
+    form.submit();
+}

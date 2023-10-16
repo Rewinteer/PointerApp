@@ -42,6 +42,13 @@
             <button id="save-edits-btn" class="btn btn-success" onclick="saveEdits()">Save edits</button>
         </div>
         <div>
+            <!-- <button id="history-btn" class="btn btn-outline-info" onclick="getMapHistory()">History</button> -->
+            <form id="historyForm" action="/getHistory" method="get" target="_blank">
+                <button id="list-history-btn" class="btn btn-outline-info" type="button" onclick="getMapHistory()">History</button>
+                <input type="hidden" id="history_input" name="id">
+            </form>
+        </div>
+        <div>
             <button id="remove-point-btn" class="btn btn-danger" onclick="removePoint()">Remove point</button>
         </div>
         

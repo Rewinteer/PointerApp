@@ -156,3 +156,13 @@ nav .navbar-brand .green
   .scroll-to-bottom:hover {
     opacity: 1;
   }
+
+/* tables */
+td, th {
+    text-align: center;
+}
+
+.list-point-attrs {
+    display: flex;
+    flex-direction: column;
+}

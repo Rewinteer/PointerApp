@@ -43,7 +43,7 @@
                         </div>
                     </td>
                     <td class="checkbox-cell" style="text-align: center;">
-                        <div class="form-check form-switch" style="padding-bottom: 5px; float: right;">
+                        <div class="form-check form-switch" style="padding-bottom: 5px;">
                             {% if row[3] %}
                                 <input class="form-check-input list-checkbox" type="checkbox" checked>
                             {% else %}
@@ -51,8 +51,14 @@
                             {% endif %}
                             <label class="form-check-label">Completed</label>
                         </div>
+                        <div>
+                            <form id="historyForm" action="/getHistory" method="get" target="_blank">
+                                <button id="list-history-btn" class="btn btn-outline-info" type="button" onclick="getHistory({{ row[0] }})">History</button>
+                                <input type="hidden" id="history_input" name="id">
+                            </form>
+                        </div>
                     </td>
-                </tr>
+                </tr> 
             {% endfor %}
         </tbody>
     </table>

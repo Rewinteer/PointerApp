@@ -233,3 +233,11 @@ function importData() {
         });
     }
 }
+
+function getHistory(id) {
+    var form = document.getElementById('historyForm');
+    var input = form.querySelector('input[name="id"]')
+    input.value = id;
+    console.log(input.value)
+    form.submit();
+}

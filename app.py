@@ -349,6 +349,62 @@ def importData():
     
     return "Data successfully imported"
 
+@app.route("/getHistory", methods=["GET"])
+@login_required
+def getHistory():
+    if "id" in request.args:
+        id = request.args.get('id')
+
+        print("id = ", id)
+
+        historyRows = getDbRows("""SELECT point_id, point_name, pt_attributes, pt_version, pt_completed, CAST(pt_version_created as TEXT)
+                         FROM history WHERE point_id = %s AND creator_id = %s 
+                         ORDER BY pt_version DESC""", (id, session["user_id"]))
+        
+        print("historyData = ", historyRows)
+
+        currentVersion = getDbRows("""SELECT id, name, attributes, version, is_completed, CAST(modified as TEXT)
+                         FROM points WHERE id = %s AND user_id = %s""", (id, session["user_id"]))[0]
+        
+        print("currentData = ", currentVersion)
+                
+        if (historyRows is None) or (currentVersion is None):
+            return "Database error", 500
+        else:
+            versions = []
+
+            currentData = {
+                "id": currentVersion[0],
+                "name": currentVersion[1],
+                "attributes": currentVersion[2],
+                "version": currentVersion[3],
+                "is_completed": currentVersion[4],
+                "version_created": currentVersion[5],
+                "is_latest": True
+            }
+            versions.append(currentData)
+
+
+            for row in historyRows:
+                entry = {
+                    "id": row[0],
+                    "name": row[1],
+                    "attributes": row[2],
+                    "version": row[3],
+                    "is_completed": row[4],
+                    "version_created": row[5],
+                    "is_latest": False
+                }
+                versions.append(entry)
+
+
+            print(versions)
+
+            return render_template("history.html", versions=versions)
+
+    else:
+        return "wrong point ID"
+    
 
 
 
