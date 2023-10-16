@@ -184,6 +184,7 @@ td, th {
 .row-button-group {
     display: flex;
     justify-content: flex-start;
-    margin-top: 15px;
+    margin-top: 10px;
     margin-left: 40px; 
+    margin-bottom: 20px;
 }
