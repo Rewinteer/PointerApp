@@ -36,3 +36,14 @@ modified
         </div>
     </div>
 </td>
+
+
+
+
+<form id="sortById" action="/pointList" method="get">
+    <th scope="col">
+        <button type="submit" class="table-header-button">ID</button> 
+        <input type="hidden" name="sort_by" value="id">
+        <input type="hidden" name="order" value="order">
+    </th>
+</form>
