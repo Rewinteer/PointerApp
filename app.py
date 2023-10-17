@@ -36,6 +36,8 @@ app.config["SESSION_PERMANENT"] = True
 app.config["PERMANENT_SESSION_LIFETIME"] = 1209600
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+# set max file size to 5 mb
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
 
 @app.route("/register", methods=["GET", "POST"])
