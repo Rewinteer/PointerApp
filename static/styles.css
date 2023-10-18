@@ -4,6 +4,19 @@ nav .navbar-brand
     font-size: xx-large;
 }
 
+#nav {
+    position: relative;
+    z-index: 1001;
+}
+
+@media (min-width: 992px) {
+    .desktop-logout {
+        position: absolute;
+        right: 0;
+        padding-right: 8px;
+    }
+}
+
 /* Colors for brand */
 nav .navbar-brand .blue
 {
@@ -72,7 +85,7 @@ nav .navbar-brand .green
     height: 100%;
     padding: 20px;
     background-color: #fff;
-    z-index: 1000;
+    z-index: 1002;
     box-shadow: -5px 0px 5px rgba(0, 0, 0, 0.3);
     display: none;
     overflow: auto;
