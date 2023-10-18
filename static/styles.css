@@ -54,7 +54,7 @@ nav .navbar-brand .green
     top: 0;
     right: 0;
     width: calc(33.33% - 20px);
-    min-width: none;
+    min-width: 600px;
     height: 100%;
     padding: 20px;
     background-color: #fff;
