@@ -37,7 +37,7 @@ app.config["PERMANENT_SESSION_LIFETIME"] = 1209600
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 # set max file size to 5 mb
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -465,8 +465,6 @@ def getHistory():
     if "id" in request.args:
         id = request.args.get("id")
 
-        print("id = ", id)
-
         historyRows = getDbRows(
             """SELECT point_id, point_name, pt_attributes, pt_version, pt_completed, CAST(pt_version_created as TEXT)
                          FROM history WHERE point_id = %s AND creator_id = %s 
@@ -474,15 +472,11 @@ def getHistory():
             (id, session["user_id"]),
         )
 
-        print("historyData = ", historyRows)
-
         currentVersion = getDbRows(
             """SELECT id, name, attributes, version, is_completed, CAST(modified as TEXT)
                          FROM points WHERE id = %s AND user_id = %s""",
             (id, session["user_id"]),
         )[0]
-
-        print("currentData = ", currentVersion)
 
         if (historyRows is None) or (currentVersion is None):
             return "Database error", 500
@@ -511,8 +505,6 @@ def getHistory():
                     "is_latest": False,
                 }
                 versions.append(entry)
-
-            print(versions)
 
             return render_template("history.html", versions=versions)
 

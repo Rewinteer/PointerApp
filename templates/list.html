@@ -13,15 +13,16 @@
                     <div class="table-header-container">
                         ID
                         <div class="sort-icons">
-                            <button type="submit" class="sort-button" name="sort_order" value="ASC">
+                            <button type="button" class="sort-button" onclick="handleSortClick('sortById', 'ASC')">
                                 <i class="fa fa-chevron-up" aria-hidden="true"></i>
                             </button>
-                            <button type="submit" class="sort-button" name="sort_order" value="DESC">
+                            <button type="button" class="sort-button" onclick="handleSortClick('sortById', 'DESC')">
                                 <i class="fa fa-chevron-down" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
                     <input type="hidden" name="sort_by" value="id">
+                    <input type="hidden" name="sort_order">
                 </form>
             </th>
             <th scope="col">
@@ -29,32 +30,34 @@
                     <div class="table-header-container">
                         Name
                         <div class="sort-icons">
-                            <button type="submit" class="sort-button" name="sort_order" value="ASC">
+                            <button type="button" class="sort-button" onclick="handleSortClick('sortByName', 'ASC')">
                                 <i class="fa fa-chevron-up" aria-hidden="true"></i>
                             </button>
-                            <button type="submit" class="sort-button" name="sort_order" value="DESC">
+                            <button type="button" class="sort-button" onclick="handleSortClick('sortByName', 'DESC')">
                                 <i class="fa fa-chevron-down" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
                     <input type="hidden" name="sort_by" value="name">
+                    <input type="hidden" name="sort_order">
                 </form>
             </th>
             <th scope="col">Attributes</th>
             <th scope="col">
-                <form id="sortByName" action="/pointList" method="get">
+                <form id="sortByCompletion" action="/pointList" method="get">
                     <div class="table-header-container">
                         Completion
                         <div class="sort-icons">
-                            <button type="submit" class="sort-button" name="sort_order" value="ASC">
+                            <button type="button" class="sort-button" onclick="handleSortClick('sortByCompletion', 'ASC')">
                                 <i class="fa fa-chevron-up" aria-hidden="true"></i>
                             </button>
-                            <button type="submit" class="sort-button" name="sort_order" value="DESC">
+                            <button type="button" class="sort-button" onclick="handleSortClick('sortByCompletion', 'DESC')">
                                 <i class="fa fa-chevron-down" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
                     <input type="hidden" name="sort_by" value="is_completed">
+                    <input type="hidden" name="sort_order">
                 </form>
             </th>
         </tr>
@@ -114,7 +117,7 @@
 </table>
 <div id="scroll-to-bottom" class="scroll-to-bottom"></div>
 <div>
-    <button type="button" class="btn btn-success" onclick="saveListEdits()">Save attributes edits</button>
+    <button type="button" class="btn btn-success" onclick="handleSortClick('sortById', 'ASC')">Save attributes edits</button>
     <button type="button" class="btn btn-warning" onclick="discardListEdits()">Discard attributes edits</button>
     <button type="button" class="btn btn-outline-info" onclick="exportData()">Export to GeoJSON</button>
 </div>

@@ -100,7 +100,7 @@ function saveListEdits() {
         pointNames[pointId] = pointName;      
     }
 
-    if (window.confirm(`Are you sure you want to save your attributes edits?`)) {
+    if (window.confirm(`Are you sure you want to save your edits?`)) {
         
         showLoadingOverlay();
         fetch('/listPointsUpdate', {
@@ -126,6 +126,9 @@ function saveListEdits() {
             showResponsePopup(error.message);
             closeLoadingOverlay();
         });
+        return 0;
+    } else {
+        return 1;
     }
 }
 
@@ -240,4 +243,19 @@ function getHistory(id) {
     input.value = id;
     console.log(input.value)
     form.submit();
+}
+
+function handleSortClick(formId, order) {
+    var form = document.getElementById(formId);
+    form.querySelector('input[name="sort_order"]').value = order;
+    const saving = saveListEdits();
+    if (saving == 0) {
+        var form = document.getElementById(formId);
+        form.querySelector('input[name="sort_order"]').value = order;
+        form.submit();
+    } else {
+        if (window.confirm(`Usaved data will be lost after sorting. Do you want to proceed?`)) {
+            form.submit();
+        }
+    }    
 }
