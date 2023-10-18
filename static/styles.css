@@ -49,7 +49,7 @@ nav .navbar-brand .green
     margin-top: 66px;
 }
 
-#edit-panel {
+/* #edit-panel {
     position: absolute;
     top: 0;
     right: 0;
@@ -61,6 +61,21 @@ nav .navbar-brand .green
     z-index: 1000;
     box-shadow: -5px 0px 5px rgba(0, 0, 0, 0.3);
     display: none;
+} */
+
+#edit-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 650px;
+    max-width: 100%;
+    height: 100%;
+    padding: 20px;
+    background-color: #fff;
+    z-index: 1000;
+    box-shadow: -5px 0px 5px rgba(0, 0, 0, 0.3);
+    display: none;
+    overflow: auto;
 }
   
 #edit-panel.show {
