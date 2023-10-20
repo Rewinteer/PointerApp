@@ -23,8 +23,7 @@ from helpers import (
     usernameAlreadyExists,
     getDbRows,
     executeQuery,
-    getFeatureCollection,
-    passCurrentDataToHistory,
+    getFeatureCollection
 )
 
 app = Flask(__name__)
@@ -198,14 +197,7 @@ def removePoint():
     id = request.get_json().get("id")
     user_id = session["user_id"]
 
-    # user_id check
-    rows = getDbRows("SELECT user_id FROM points WHERE id=%s", (id,))
-    if rows is None:
-        return "Database error, please try one more time", 500
-    elif user_id != rows[0][0]:
-        return "Wrong point ID", 400
-
-    execute = executeQuery("DELETE FROM points WHERE id=%s;", (id,))
+    execute = executeQuery("DELETE FROM points WHERE id=%s AND user_id=%s;", (id, session["user_id"]))
     if execute == 1:
         return "Database error, please try one more time", 500
 
@@ -476,23 +468,25 @@ def getHistory():
             """SELECT id, name, attributes, version, is_completed, CAST(modified as TEXT)
                          FROM points WHERE id = %s AND user_id = %s""",
             (id, session["user_id"]),
-        )[0]
+        )
 
         if (historyRows is None) or (currentVersion is None):
             return "Database error", 500
         else:
             versions = []
 
-            currentData = {
-                "id": currentVersion[0],
-                "name": currentVersion[1],
-                "attributes": currentVersion[2],
-                "version": currentVersion[3],
-                "is_completed": currentVersion[4],
-                "version_created": currentVersion[5],
-                "is_latest": True,
-            }
-            versions.append(currentData)
+            if len(currentVersion) > 0:
+                currentVersion = currentVersion[0]
+                currentData = {
+                    "id": currentVersion[0],
+                    "name": currentVersion[1],
+                    "attributes": currentVersion[2],
+                    "version": currentVersion[3],
+                    "is_completed": currentVersion[4],
+                    "version_created": currentVersion[5],
+                    "is_latest": True,
+                }
+                versions.append(currentData)
 
             for row in historyRows:
                 entry = {
