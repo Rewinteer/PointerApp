@@ -20,10 +20,10 @@ from psycopg2 import sql
 from helpers import (
     login_required,
     get_db_connection,
-    usernameAlreadyExists,
     getDbRows,
     executeQuery,
-    getFeatureCollection
+    getFeatureCollection,
+    onAlreadyExistsInUsers
 )
 
 app = Flask(__name__)
@@ -42,18 +42,15 @@ app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
+        email = request.form.get("email")
+        onAlreadyExistsInUsers("email", email)
+
         username = request.form.get("username")
         if 1 > len(username) > 255:
             flash("Incorrect username length", "error")
             return redirect("/register")
 
-        already_exists = usernameAlreadyExists(username)
-        if already_exists != None and already_exists:
-            flash("Username already exists, choose another one" "error")
-            return redirect("/register")
-        elif already_exists == None:
-            flash("Database error, please submit one more time", "error")
-            return redirect("/register")
+        onAlreadyExistsInUsers("username", username)        
 
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
@@ -69,8 +66,8 @@ def register():
             conn = get_db_connection()
             cur = conn.cursor()
             cur.execute(
-                "INSERT INTO users(username, hash) VALUES (%s, %s)",
-                (username, generate_password_hash(password)),
+                "INSERT INTO users(email,username, hash) VALUES (%s, %s, %s)",
+                (email, username, generate_password_hash(password)),
             )
             conn.commit()
             cur.close()

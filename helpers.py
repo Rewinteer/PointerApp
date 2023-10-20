@@ -2,9 +2,10 @@ import psycopg2
 import os
 import json
 
-from flask import session, redirect
+from flask import session, redirect, flash
 from functools import wraps
 from urllib.parse import urlparse 
+from psycopg2 import sql
 
 # url = os.environ['DB_URL']
 # parsed_url = urlparse(url)
@@ -69,13 +70,18 @@ def getDbRows(query, placeholdersTuple):
         conn.close()
         return None
 
-def usernameAlreadyExists(username):
-    rows = getDbRows('SELECT id FROM users WHERE username = %s', (username,))
+def onAlreadyExistsInUsers(column, value):
+    query = sql.SQL('SELECT id FROM users WHERE {column_name} = %s;').format(column_name=sql.Identifier(column))
+    rows = getDbRows(query, (value,))
 
     if rows != None:
-        return len(rows) > 0
+        if len(rows) > 0:
+            output = "{column_name} already exists, choose another one".format(column_name=column)
+            flash(message=output, category="error")
+            return redirect("/register")
     else:
-        return rows
+        flash("Database error, please submit one more time", "error")
+        return redirect("/register")
     
 def getFeatureCollection(rows):
     outfile = {
