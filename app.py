@@ -2,6 +2,9 @@ import os
 import psycopg2
 import json
 import tempfile
+import jwt
+from time import time
+from flask_mail import Message, Mail
 
 from flask import (
     Flask,
@@ -16,17 +19,20 @@ from flask import (
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from psycopg2 import sql
-
 from helpers import (
     login_required,
     get_db_connection,
     getDbRows,
     executeQuery,
     getFeatureCollection,
-    onAlreadyExistsInUsers
+    onAlreadyExistsInUsers,
+    isExists,
+    send_mail,
+    verify_reset_token
 )
 
 app = Flask(__name__)
+
 app.secret_key = os.environ["SECRET_KEY"]
 
 # configure session
@@ -37,6 +43,13 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 # set max file size to 5 mb
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+# configure mail
+app.config["MAIL_SERVER"] = 'smtp.googlemail.com'
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USERNAME"] = os.environ["MAIL_ADDRESS"]
+app.config["MAIL_PASSWORD"] = os.environ["APP_PASSWORD"]
+mail = Mail(app)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -117,6 +130,43 @@ def login():
     else:
         return render_template("login.html")
 
+@app.route("/reset_request", methods=["GET", "POST"])
+def reset_request():
+    if request.method == "POST":
+        email = request.form.get("email")
+        if isExists("email", email):
+            user = getDbRows("SELECT username FROM users WHERE email = %s", (email,))[0][0]
+            send_mail(email, user, mail)
+            flash("Reset link sent on your email.", "success")
+            return redirect("/login")
+        else:
+            flash("Email doesn't exist")
+            return redirect("/reset_request")
+    else:
+        return render_template("reset_request.html")
+    
+
+@app.route('/password_reset_verified/<token>', methods=['GET', 'POST'])
+def reset_verified(token):
+    username = verify_reset_token(token)
+    print(username)
+
+    if not username:
+        flash('no user found')
+        return redirect('/login')
+    
+    password = request.form.get('password')
+    if password:
+        if len(password) < 6:
+            flash("Password should consist at least of 6 characters.")
+            return redirect('/login')
+        
+        execute = executeQuery("UPDATE users SET hash=%s WHERE username=%s", (generate_password_hash(password), username))
+        if execute == 1:
+            flash("Database error", "error")
+        return redirect("/login")
+    return render_template('reset_verified.html')
+        
 
 @app.route("/logout")
 @login_required

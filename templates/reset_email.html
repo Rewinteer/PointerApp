@@ -1,0 +1,7 @@
+<p>
+    Hi, {{ user }} <br>
+    To reset your password
+    <a href="{{ url_for('reset_verified', user=user, token=token, _external=True) }}">
+        click here
+    </a>.
+</p>

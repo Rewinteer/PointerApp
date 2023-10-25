@@ -2,10 +2,13 @@ import psycopg2
 import os
 import json
 
-from flask import session, redirect, flash
+from flask import session, redirect, flash, render_template
 from functools import wraps
 from urllib.parse import urlparse 
 from psycopg2 import sql
+import jwt
+from time import time
+from flask_mail import Message, Mail
 
 # url = os.environ['DB_URL']
 # parsed_url = urlparse(url)
@@ -71,17 +74,27 @@ def getDbRows(query, placeholdersTuple):
         return None
 
 def onAlreadyExistsInUsers(column, value):
-    query = sql.SQL('SELECT id FROM users WHERE {column_name} = %s;').format(column_name=sql.Identifier(column))
-    rows = getDbRows(query, (value,))
+    # query = sql.SQL('SELECT id FROM users WHERE {column_name} = %s;').format(column_name=sql.Identifier(column))
+    # rows = getDbRows(query, (value,))
 
-    if rows != None:
-        if len(rows) > 0:
+    isExists = isExists(column, value)
+
+    if isExists != None:
+        if isExists:
             output = "{column_name} already exists, choose another one".format(column_name=column)
             flash(message=output, category="error")
             return redirect("/register")
     else:
         flash("Database error, please submit one more time", "error")
         return redirect("/register")
+    
+def isExists(column, value):
+    query = sql.SQL('SELECT id FROM users WHERE {column_name} = %s;').format(column_name=sql.Identifier(column))
+    rows = getDbRows(query, (value,))
+    if rows != None:
+        return len(rows) > 0
+    else:
+        return None
     
 def getFeatureCollection(rows):
     outfile = {
@@ -112,3 +125,23 @@ def getFeatureCollection(rows):
         outfile["features"].append(feature)
     
     return(outfile)
+
+def send_mail(email, user, mail):
+    token = get_reset_token(user)
+    msg = Message()
+    msg.subject = "Pointer password reset"
+    msg.sender = os.getenv('MAIL_ADDRESS')
+    msg.recipients = [email]
+    msg.html = render_template('reset_email.html', user=user, token=token)
+    mail.send(msg)
+
+def get_reset_token(username, expires=1800):
+    return jwt.encode({'reset_password': username, 'exp': time() + expires}, key=os.getenv("SECRET_KEY"))
+
+def verify_reset_token(token):
+    try:
+        username = jwt.decode(token, key=os.getenv("SECRET_KEY"), algorithms=["HS256"])['reset_password']
+        return username
+    except Exception as e:
+            print(e)
+            return
