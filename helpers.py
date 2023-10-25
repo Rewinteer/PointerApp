@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from psycopg2 import sql
 import jwt
 from time import time
-from flask_mail import Message, Mail
+from flask_mail import Message
 
 # url = os.environ['DB_URL']
 # parsed_url = urlparse(url)

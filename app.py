@@ -2,9 +2,7 @@ import os
 import psycopg2
 import json
 import tempfile
-import jwt
-from time import time
-from flask_mail import Message, Mail
+from flask_mail import Mail
 
 from flask import (
     Flask,
