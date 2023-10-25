@@ -147,7 +147,6 @@ def reset_request():
 @app.route('/password_reset_verified/<token>', methods=['GET', 'POST'])
 def reset_verified(token):
     username = verify_reset_token(token)
-    print(username)
 
     if not username:
         flash('no user found')
