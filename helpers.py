@@ -74,10 +74,10 @@ def getDbRows(query, placeholdersTuple):
         return None
 
 def onAlreadyExistsInUsers(column, value):
-    isExists = isExists(column, value)
+    exists = isExists(column, value)
 
-    if isExists != None:
-        if isExists:
+    if exists != None:
+        if exists:
             output = "{column_name} already exists, choose another one".format(column_name=column)
             flash(message=output, category="error")
             return redirect("/register")
