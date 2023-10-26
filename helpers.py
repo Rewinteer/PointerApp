@@ -74,10 +74,10 @@ def getDbRows(query, placeholdersTuple):
         return None
 
 def onAlreadyExistsInUsers(column, value):
-    exists = isExists(column, value)
+    isExists = ifExists(column, value)
 
-    if exists != None:
-        if exists:
+    if isExists != None:
+        if isExists:
             output = "{column_name} already exists, choose another one".format(column_name=column)
             flash(message=output, category="error")
             return redirect("/register")
@@ -85,7 +85,7 @@ def onAlreadyExistsInUsers(column, value):
         flash("Database error, please submit one more time", "error")
         return redirect("/register")
     
-def isExists(column, value):
+def ifExists(column, value):
     query = sql.SQL('SELECT id FROM users WHERE {column_name} = %s;').format(column_name=sql.Identifier(column))
     rows = getDbRows(query, (value,))
     if rows != None:
