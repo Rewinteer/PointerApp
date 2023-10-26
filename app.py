@@ -24,7 +24,7 @@ from helpers import (
     executeQuery,
     getFeatureCollection,
     onAlreadyExistsInUsers,
-    isExists,
+    ifExists,
     send_mail,
     verify_reset_token
 )
@@ -132,7 +132,7 @@ def login():
 def reset_request():
     if request.method == "POST":
         email = request.form.get("email")
-        if isExists("email", email):
+        if ifExists("email", email):
             user = getDbRows("SELECT username FROM users WHERE email = %s", (email,))[0][0]
             send_mail(email, user, mail)
             flash("Reset link sent on your email.", "success")
