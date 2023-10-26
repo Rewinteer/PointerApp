@@ -117,7 +117,7 @@ def login():
             flash("Database error. Please try one more time", "error")
             return redirect("/login")
         elif len(rows) != 1 or not check_password_hash(
-            rows[0][2], request.form.get("password")
+            rows[0][3], request.form.get("password")
         ):
             flash("Invalid username and/or password", "error")
             return redirect("/login")
