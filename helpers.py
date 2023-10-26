@@ -74,9 +74,6 @@ def getDbRows(query, placeholdersTuple):
         return None
 
 def onAlreadyExistsInUsers(column, value):
-    # query = sql.SQL('SELECT id FROM users WHERE {column_name} = %s;').format(column_name=sql.Identifier(column))
-    # rows = getDbRows(query, (value,))
-
     isExists = isExists(column, value)
 
     if isExists != None:

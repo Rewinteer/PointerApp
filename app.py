@@ -303,8 +303,6 @@ def saveEdits():
 @app.route("/pointList")
 @login_required
 def pointList():
-    print(request.args)
-
     if "sort_by" in request.args:
         sort_by = request.args.get("sort_by")
         order = "ASC"
