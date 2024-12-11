@@ -1,5 +1,5 @@
 # PointerApp
-#### Working Instance:  <https://pointerapp.onrender.com> 
+#### Working Instance:  <http://198.46.249.185:5000/> 
 Note: This instance may shut down due to inactivity, resulting in an extended delay for the first access.
 #### Video Demo:  <https://youtu.be/Ib7x6hEpWNM>
 #### Description:
