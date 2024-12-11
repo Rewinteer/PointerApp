@@ -1,3 +1,6 @@
 .venv/
 __pycache__/
-flask_sessionvenv/bin/activate
+app/flask_session/
+.venv
+.env
+
