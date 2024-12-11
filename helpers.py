@@ -1,6 +1,5 @@
 import psycopg2
 import os
-import json
 
 from flask import session, redirect, flash, render_template
 from functools import wraps
@@ -18,6 +17,7 @@ password = parsed_url.password
 host = parsed_url.hostname
 port = parsed_url.port
 
+
 def get_db_connection():
     conn = psycopg2.connect(
         database=database,
@@ -27,6 +27,7 @@ def get_db_connection():
         port=port)
     return conn
 
+
 def login_required(f):
     @wraps (f)
     def decorated_function(*args, **kwargs):
@@ -35,13 +36,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# def get_db_connection():
-#     conn = psycopg2.connect(
-#         host="localhost",
-#         database="test",
-#         user=os.environ['DB_USERNAME'],
-#         password=os.environ['DB_PASSWORD'])
-#     return conn
 
 def executeQuery(query, placeholdersTuple):
     try:
@@ -59,6 +53,7 @@ def executeQuery(query, placeholdersTuple):
         conn.close()
         return 1
 
+
 def getDbRows(query, placeholdersTuple):
     try:
         conn = get_db_connection()
@@ -73,6 +68,7 @@ def getDbRows(query, placeholdersTuple):
         conn.close()
         return None
 
+
 def onAlreadyExistsInUsers(column, value):
     isExists = ifExists(column, value)
 
@@ -84,7 +80,8 @@ def onAlreadyExistsInUsers(column, value):
     else:
         flash("Database error, please submit one more time", "error")
         return redirect("/register")
-    
+
+
 def ifExists(column, value):
     query = sql.SQL('SELECT id FROM users WHERE {column_name} = %s;').format(column_name=sql.Identifier(column))
     rows = getDbRows(query, (value,))
@@ -92,7 +89,8 @@ def ifExists(column, value):
         return len(rows) > 0
     else:
         return None
-    
+
+
 def getFeatureCollection(rows):
     outfile = {
         "type": "FeatureCollection",
@@ -123,6 +121,7 @@ def getFeatureCollection(rows):
     
     return(outfile)
 
+
 def send_mail(email, user, mail):
     token = get_reset_token(user)
     msg = Message()
@@ -132,8 +131,10 @@ def send_mail(email, user, mail):
     msg.html = render_template('reset_email.html', user=user, token=token)
     mail.send(msg)
 
+
 def get_reset_token(username, expires=1800):
     return jwt.encode({'reset_password': username, 'exp': time() + expires}, key=os.getenv("SECRET_KEY"))
+
 
 def verify_reset_token(token):
     try:

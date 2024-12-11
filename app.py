@@ -113,11 +113,13 @@ def login():
             "SELECT * FROM users WHERE username = %s", (request.form.get("username"),)
         )
 
+        password = request.form.get("password")
+        pwhash = rows[0][2]
         if rows is None:
             flash("Database error. Please try one more time", "error")
             return redirect("/login")
         elif len(rows) != 1 or not check_password_hash(
-            rows[0][3], request.form.get("password")
+            pwhash, password
         ):
             flash("Invalid username and/or password", "error")
             return redirect("/login")
@@ -157,7 +159,6 @@ def reset_verified(token):
         if len(password) < 6:
             flash("Password should consist at least of 6 characters.")
             return redirect('/login')
-        
         execute = executeQuery("UPDATE users SET hash=%s WHERE username=%s", (generate_password_hash(password), username))
         if execute == 1:
             flash("Database error", "error")
